@@ -784,7 +784,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 <p align="center">
   <img src="docs/ALEV_logo.jpg" width="80" alt="ALEV"/>
   <br/>
-  <strong>ALEV — Adaptive Live Event Venue for Telegram</strong>
+  <strong>ALEV — Adaptive Live Event Venue -for Telegram</strong>
   <br/>
   Developed by <a href="https://github.com/utkukose">Prof. Dr. Utku Köse</a> · SDU Robotics and Innovation Community (RIT)
 </p>
