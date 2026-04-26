@@ -2,7 +2,7 @@
   <img src="docs/ALEV_logo.jpg" alt="ALEV Logo" width="220"/>
 </p>
 
-<h1 align="center">ALEV — Adaptive Live Event Venue for Telegram</h1>
+<h1 align="center">ALEV — Adaptive Live Event Venue -for Telegram</h1>
 
 <p align="center">
   <strong>A gamification and event management platform that turns Telegram into a competitive RPG arena for hackathons, innovation challenges, and team events.</strong>
