@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ brand.name }} — Projeksiyon</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Outfit:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#08090a;--ink-2:#101214;--ink-3:#181c1f;--wire:#252a2e;--wire-2:#2e3438;
+  --mute:#4a5360;--dim:#7a8590;--soft:#b0bcc8;--white:#f5f8fa;
+  --amber:#f59e0b;--amber-d:#d97706;--ok:#10b981;--err:#ef4444;
+  --font:'Outfit',system-ui,sans-serif;--mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);background:var(--ink);color:var(--soft)}
+
+/* Scan-line efekti */
+body::after{
+  content:'';pointer-events:none;
+  position:fixed;inset:0;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+}
+
+/* Header bar */
+.hbar{
+  height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;
+  border-bottom:1px solid var(--wire);
+  background:var(--ink-2);
+  position:relative;
+}
+.hbar::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+  opacity:.5;
+}
+.hbar-brand{font-weight:900;font-size:1rem;color:var(--white);letter-spacing:.1em;text-transform:uppercase}
+.hbar-time{font-family:var(--mono);font-size:.85rem;color:var(--amber);letter-spacing:.1em}
+.hbar-live{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.65rem;color:var(--mute);text-transform:uppercase;letter-spacing:.1em}
+.hbar-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Main grid */
+.proj-layout{display:grid;grid-template-columns:1fr 340px;grid-template-rows:1fr auto;height:calc(100vh - 52px);gap:0}
+
+/* Podium */
+.podium-area{padding:2rem;display:flex;flex-direction:column;justify-content:center}
+.podium-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--mute);font-family:var(--mono);margin-bottom:1.5rem}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:1rem;align-items:end;margin-bottom:1.5rem}
+.pod-card{background:var(--ink-2);border:1px solid var(--wire);border-radius:12px;padding:1.25rem;text-align:center;position:relative;overflow:hidden;transition:all .4s}
+.pod-1{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.3)}
+.pod-2{background:rgba(148,163,184,.03);border-color:rgba(148,163,184,.15)}
+.pod-3{background:rgba(161,98,7,.03);border-color:rgba(161,98,7,.15)}
+.pod-rank{font-size:1.5rem;margin-bottom:.5rem;display:block}
+.pod-name{font-size:1rem;font-weight:800;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pod-role{font-size:.65rem;font-family:var(--mono);color:var(--mute);margin-top:.15rem;text-transform:uppercase;letter-spacing:.06em}
+.pod-xp{font-size:1.4rem;font-weight:900;color:var(--amber);font-family:var(--mono);margin-top:.5rem}
+.pod-xp-label{font-size:.6rem;color:var(--mute);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono)}
+.pod-bar{position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--amber)}
+
+/* Full list */
+.full-list{padding:0 1rem 2rem 0;overflow:hidden}
+.list-item{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem .85rem;border-bottom:1px solid var(--wire);
+  transition:all .3s;
+}
+.list-item:hover{background:var(--ink-3)}
+.li-rank{font-family:var(--mono);font-size:.72rem;color:var(--mute);width:28px;text-align:center;flex-shrink:0}
+.li-bar{flex:1;height:3px;background:var(--wire);border-radius:2px;overflow:hidden}
+.li-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--ok));border-radius:2px;transition:width .6s}
+.li-name{font-weight:700;color:var(--white);font-size:.85rem;width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-xp{font-family:var(--mono);font-size:.78rem;color:var(--amber);width:80px;text-align:right;flex-shrink:0}
+
+/* Right panel */
+.right-panel{background:var(--ink-2);border-left:1px solid var(--wire);display:flex;flex-direction:column}
+.rp-section{padding:1rem 1.25rem;border-bottom:1px solid var(--wire)}
+.rp-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--mute);font-family:var(--mono);margin-bottom:.75rem}
+
+/* Ticker */
+.ticker-wrap{border-top:1px solid var(--wire);height:36px;overflow:hidden;background:var(--ink-2);grid-column:1/-1}
+.ticker{
+  display:flex;align-items:center;height:100%;
+  white-space:nowrap;font-family:var(--mono);font-size:.72rem;color:var(--dim);
+  animation:scroll 30s linear infinite;
+}
+@keyframes scroll{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+.ticker span{margin:0 2rem;color:var(--amber)}
+
+/* Scenario strip */
+.scenario-strip{
+  background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);
+  border-radius:8px;padding:.5rem .85rem;
+  display:none;align-items:center;gap:.75rem;
+  font-family:var(--mono);font-size:.72rem;
+  margin-bottom:1rem;
+}
+.scenario-strip.show{display:flex}
+.sc-name{color:var(--amber);font-weight:700}
+.sc-mult{color:var(--ok)}
+
+/* Duel overlay */
+.duel-flash{
+  position:fixed;inset:0;z-index:900;
+  background:rgba(8,9,10,.92);display:none;
+  align-items:center;justify-content:center;flex-direction:column;
+  backdrop-filter:blur(8px);
+}
+.duel-flash.show{display:flex;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.df-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--mute);font-family:var(--mono);margin-bottom:1.5rem}
+.df-vs{font-size:3rem;font-weight:900;color:var(--white);text-align:center;line-height:1.1}
+.df-vs .winner{color:var(--amber)}
+.df-xp{font-family:var(--mono);font-size:1rem;color:var(--ok);margin-top:1rem}
+
+/* Announcement */
+.ann-overlay{
+  position:fixed;bottom:3rem;left:50%;transform:translateX(-50%);z-index:800;
+  background:var(--ink-3);border:1px solid var(--wire-2);border-top:2px solid var(--amber);
+  border-radius:12px;padding:1rem 1.75rem;text-align:center;
+  max-width:600px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.6);
+  display:none;animation:slideUp .3s ease;
+}
+.ann-overlay.show{display:block}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(16px);opacity:0}to{transform:translateX(-50%);opacity:1}}
+.ann-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:var(--amber);font-family:var(--mono);margin-bottom:.4rem}
+.ann-msg{font-size:1rem;font-weight:700;color:var(--white)}
+
+/* Fullscreen hint */
+.fs-hint{position:fixed;bottom:.75rem;right:1rem;font-family:var(--mono);font-size:.62rem;color:var(--mute);opacity:.4;z-index:500}
+
+[data-theme="light"] {
+  --ink:#f8f9fa;--ink-2:#ffffff;--ink-3:#f1f3f5;--ink-4:#e9ecef;
+  --wire:#dee2e6;--wire-2:#ced4da;--mute:#868e96;--dim:#495057;
+  --soft:#343a40;--white:#0d0e0f;
+  --amber:#d97706;--amber-d:#b45309;
+  --ok:#059669;--err:#dc2626;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+</style>
+<script>(function(){var t=localStorage.getItem('alev-theme');var sys=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',t||sys);})();</script>
+</head>
+<body>
+<script>
+(function(){
+  const s=localStorage.getItem('alev-theme');
+  const sys=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',s||sys);
+})();
+</script>
+
+<!-- Duel flash -->
+<div class="duel-flash" id="duel-flash" onclick="this.classList.remove('show')">
+  <div class="df-title">⚔ Düello Sonucu</div>
+  <div class="df-vs" id="df-vs"></div>
+  <div class="df-xp" id="df-xp"></div>
+</div>
+
+<!-- Announcement overlay -->
+<div class="ann-overlay" id="ann-overlay">
+  <div class="ann-title" id="ann-title-el">Duyuru</div>
+  <div class="ann-msg" id="ann-msg-el"></div>
+</div>
+
+<!-- Header -->
+<div class="hbar">
+  <div>
+  <div class="hbar-brand">{{ brand.name }}</div>
+  <div style="font-size:.52rem;font-family:var(--mono);color:var(--mute);letter-spacing:.06em;margin-top:.1rem">{{ brand.full_name }}</div>
+</div>
+  <div class="hbar-time" id="clock">--:--:--</div>
+  <div class="hbar-live"><span class="hbar-dot" id="live-dot"></span>CANLI</div>
+</div>
+
+<!-- Main layout -->
+<div class="proj-layout">
+
+  <!-- Sol: Podium + Full list -->
+  <div class="podium-area">
+    <div class="scenario-strip" id="scenario-strip">
+      <span class="sc-name" id="sc-name">—</span>
+      <span style="color:var(--mute)">|</span>
+      <span class="sc-mult" id="sc-mult"></span>
+    </div>
+    <div class="podium-title">Küresel Liderlik</div>
+    <div class="podium" id="podium">
+      <div class="pod-card pod-2"><span class="pod-rank">🥈</span><div class="pod-name" id="p2-name">—</div><div class="pod-xp" id="p2-xp">—</div></div>
+      <div class="pod-card pod-1"><span class="pod-rank">🥇</span><div class="pod-name" id="p1-name">—</div><div class="pod-xp" id="p1-xp">—</div><div class="pod-bar"></div></div>
+      <div class="pod-card pod-3"><span class="pod-rank">🥉</span><div class="pod-name" id="p3-name">—</div><div class="pod-xp" id="p3-xp">—</div></div>
+    </div>
+    <div class="full-list" id="full-list"></div>
+  </div>
+
+  <!-- Sağ panel -->
+  <div class="right-panel">
+    <div class="rp-section">
+      <div class="rp-label">Anlık İstatistikler</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:.78rem;color:var(--mute)">Takım Sayısı</span>
+          <span style="font-family:var(--mono);color:var(--amber);font-weight:700" id="stat-count">0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:.78rem;color:var(--mute)">Toplam BP</span>
+          <span style="font-family:var(--mono);color:var(--ok);font-weight:700" id="stat-total">0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:.78rem;color:var(--mute)">Ortalama</span>
+          <span style="font-family:var(--mono);color:var(--soft)" id="stat-avg">0</span>
+        </div>
+      </div>
+    </div>
+    <div class="rp-section" style="flex:1;overflow-y:auto">
+      <div class="rp-label">Tüm Sıralama</div>
+      <div id="right-list"></div>
+    </div>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker">
+      <span>{{ brand.name }}</span> Canlı Liderlik Tablosu
+      <span>—</span>
+      {{ brand.full_name }}
+      <span>⬡</span>
+    </div>
+  </div>
+</div>
+
+<div class="fs-hint">F11 tam ekran</div>
+
+<script>
+// Saat
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.toLocaleTimeString('tr-TR',{hour12:false});
+},1000);
+
+let allTeams=[];
+
+function render(teams) {
+  if(!teams?.length) return;
+  allTeams=teams;
+  const maxXp=teams[0].xp||1;
+
+  // Podium
+  const p=['p1','p2','p3'];
+  [0,1,2].forEach(i=>{
+    const t=teams[i];
+    if(!t) return;
+    document.getElementById(`${p[i]}-name`).textContent=t.ad;
+    document.getElementById(`${p[i]}-xp`).textContent=t.xp.toLocaleString()+' BP';
+  });
+
+  // Full list (4+)
+  const fl=document.getElementById('full-list');
+  fl.innerHTML=teams.slice(3).map((t,i)=>`
+    <div class="list-item">
+      <span class="li-rank">${i+4}</span>
+      <span class="li-name">${t.ad}</span>
+      <div class="li-bar"><div class="li-fill" style="width:${Math.round((t.xp/maxXp)*100)}%"></div></div>
+      <span class="li-xp">${t.xp.toLocaleString()}</span>
+    </div>`).join('');
+
+  // Right list
+  const rl=document.getElementById('right-list');
+  rl.innerHTML=teams.map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .1rem;border-bottom:1px solid var(--wire)">
+      <span style="font-family:var(--mono);font-size:.65rem;color:var(--mute);width:18px">${i+1}</span>
+      <span style="flex:1;font-size:.78rem;font-weight:${i<3?700:500};color:${i===0?'var(--amber)':i<3?'var(--white)':'var(--soft)'}">${t.ad}</span>
+      <span style="font-family:var(--mono);font-size:.7rem;color:${i<3?'var(--amber)':'var(--mute)'}">${t.xp.toLocaleString()}</span>
+    </div>`).join('');
+
+  // Stats
+  const total=teams.reduce((a,t)=>a+t.xp,0);
+  document.getElementById('stat-count').textContent=teams.length;
+  document.getElementById('stat-total').textContent=total.toLocaleString();
+  document.getElementById('stat-avg').textContent=Math.round(total/teams.length).toLocaleString();
+
+  // Ticker
+  document.getElementById('ticker').innerHTML=
+    teams.slice(0,5).map(t=>`<span>${t.ad}</span> ${t.xp.toLocaleString()} XP`).join(' <span style="color:var(--wire-2)">·</span> ');
+}
+
+// WS
+let ws,wsTimer;
+function connectWS(){
+  ws=new WebSocket(`ws://${location.host}/ws/projection`);
+  ws.onmessage=e=>{
+    const msg=JSON.parse(e.data);
+    if(msg.event==='init'||msg.event==='leaderboard_update') render(msg.takimlar||[]);
+    if(msg.event==='duel_result') showDuel(msg);
+    if(msg.event==='announcement') showAnn(msg.title,msg.message);
+    if(msg.event==='scenario_update') {
+      const strip=document.getElementById('scenario-strip');
+      strip.classList.add('show');
+      document.getElementById('sc-name').textContent=msg.stage||'';
+      document.getElementById('sc-mult').textContent=msg.xp_multiplier?`${msg.xp_multiplier}x BP`:'';
+    }
+    if(msg.event==='scenario_end') document.getElementById('scenario-strip').classList.remove('show');
+  };
+  ws.onopen=()=>{clearTimeout(wsTimer);document.getElementById('live-dot').style.background='var(--ok)'};
+  ws.onclose=()=>{wsTimer=setTimeout(connectWS,3000);document.getElementById('live-dot').style.background='var(--err)'};
+}
+connectWS();
+setInterval(()=>{if(ws?.readyState===1)ws.send('ping')},25000);
+
+function showDuel(msg) {
+  document.getElementById('df-vs').innerHTML=
+    `${msg.challenger}<br>vs<br>${msg.defender}<br><span class="winner">🏆 ${msg.winner}</span>`;
+  document.getElementById('df-xp').textContent=`+${msg.xp} BP`;
+  const flash=document.getElementById('duel-flash');
+  flash.classList.add('show');
+  setTimeout(()=>flash.classList.remove('show'),5000);
+}
+
+function showAnn(title,msg) {
+  document.getElementById('ann-title-el').textContent=title||'Duyuru';
+  document.getElementById('ann-msg-el').textContent=msg;
+  const ann=document.getElementById('ann-overlay');
+  ann.classList.add('show');
+  setTimeout(()=>ann.classList.remove('show'),7000);
+}
+
+// İlk yükleme
+fetch('/api/leaderboard').then(r=>r.json()).then(render);
+fetch('/api/scenario/status').then(r=>r.json()).then(d=>{
+  if(d.active){
+    document.getElementById('scenario-strip').classList.add('show');
+    document.getElementById('sc-name').textContent=d.stage_name;
+    document.getElementById('sc-mult').textContent=`${d.xp_multiplier}x BP`;
+  }
+});
+</script>
+</body>
+</html>

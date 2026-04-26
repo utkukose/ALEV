@@ -1,0 +1,89 @@
+{% extends "shared/base.html" %}
+{% block title %}{% if lang=='tr' %}Takıma Katıl{% else %}Join a Team{% endif %} — {{ brand.name }}{% endblock %}
+
+{% block content %}
+<div class="container" style="position:relative;z-index:1;max-width:500px">
+  <div style="text-align:center;padding:2rem 0 1.5rem">
+    <div style="font-size:2.5rem;margin-bottom:.5rem">◑</div>
+    <h1 style="font-size:1.6rem;font-weight:900;color:var(--wh)">
+      {% if lang=='tr' %}Takıma <span style="color:var(--ac)">Katıl</span>{% else %}Join a <span style="color:var(--ac)">Team</span>{% endif %}
+    </h1>
+    {% if event %}
+    <div style="font-size:.82rem;font-family:'DM Mono',monospace;color:var(--mu);margin-top:.35rem">{{ event.name }}</div>
+    {% endif %}
+  </div>
+
+  {% if error %}
+  <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);border-radius:10px;padding:.85rem 1rem;color:var(--er);font-size:.9rem;margin-bottom:1.25rem;text-align:center">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  {% if not event %}
+  <div class="card" style="text-align:center">
+    <div style="font-size:1.5rem;margin-bottom:.5rem">😴</div>
+    <div style="color:var(--so)">{% if lang=='tr' %}Aktif etkinlik yok{% else %}No active event{% endif %}</div>
+  </div>
+  {% elif team %}
+  <!-- Takım bulundu — üye kaydı -->
+  <div class="card" style="margin-bottom:1.25rem;border-top:2px solid var(--ac)">
+    <div style="display:flex;align-items:center;gap:.85rem">
+      <div style="font-size:1.5rem">{{ team.role_emoji or '⚔' }}</div>
+      <div>
+        <div style="font-weight:800;color:var(--wh);font-size:1.05rem">{{ team.name }}</div>
+        <div style="font-size:.78rem;font-family:'DM Mono',monospace;color:var(--mu)">
+          {{ team.role_name or '' }} · {% if lang=='tr' %}Davet kodu{% else %}Invite code{% endif %}: <strong style="color:var(--ac)">{{ code }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;color:var(--wh);margin-bottom:1rem;font-size:.95rem">
+      {% if lang=='tr' %}Bilgilerini Gir{% else %}Enter Your Details{% endif %}
+    </div>
+    <form method="POST" action="/join" style="display:flex;flex-direction:column;gap:.75rem">
+      <input type="hidden" name="code" value="{{ code }}">
+      <div>
+        <label class="fl">Telegram ID *</label>
+        <input class="fi" name="telegram_id" type="number" placeholder="123456789" required>
+        <div style="font-size:.7rem;color:var(--mu);margin-top:.28rem;font-family:'DM Mono',monospace">
+          {% if lang=='tr' %}@userinfobot yazarak öğrenebilirsiniz{% else %}Send /start to @userinfobot to find yours{% endif %}
+        </div>
+      </div>
+      <div>
+        <label class="fl">{% if lang=='tr' %}Ad Soyad{% else %}Display Name{% endif %} *</label>
+        <input class="fi" name="display_name" placeholder="{% if lang=='tr' %}Adınız{% else %}Your name{% endif %}" required>
+      </div>
+      <button type="submit" class="btn bp" style="width:100%;justify-content:center;margin-top:.25rem">
+        {% if lang=='tr' %}Takıma Katıl →{% else %}Join Team →{% endif %}
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <!-- Kod girişi -->
+  <div class="card">
+    <div style="font-weight:700;color:var(--wh);margin-bottom:1rem">
+      {% if lang=='tr' %}Davet Kodunu Gir{% else %}Enter Invite Code{% endif %}
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <input class="fi" id="code-input" placeholder="ABC123" maxlength="6" style="text-transform:uppercase;font-family:'DM Mono',monospace;font-size:1.1rem;letter-spacing:.15em;text-align:center" oninput="this.value=this.value.toUpperCase()">
+      <button class="btn bp" onclick="checkCode()">{% if lang=='tr' %}Sorgula{% else %}Check{% endif %}</button>
+    </div>
+    <div id="code-result" style="margin-top:.75rem"></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function checkCode(){
+  var code=document.getElementById('code-input').value.trim();
+  if(!code||code.length<4)return;
+  var r=document.getElementById('code-result');
+  r.innerHTML='<div style="color:var(--mu);font-size:.85rem">...</div>';
+  window.location='/join?code='+code;
+}
+document.getElementById('code-input')?.addEventListener('keydown',function(e){if(e.key==='Enter')checkCode()});
+</script>
+{% endblock %}

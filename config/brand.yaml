@@ -1,0 +1,8 @@
+brand:
+  name: "ALEV"
+  full_name: "Adaptive Live Event Venue for Telegram"
+  version: "2.0.0"
+  tagline_tr: "Etkinliklerinizi alevlendirin"
+  tagline_en: "Ignite your events"
+  bot_description_tr: "ALEV — Hackathon ve yarışma yönetim platformu"
+  bot_description_en: "ALEV — Hackathon and competition management platform"

@@ -1,0 +1,130 @@
+{
+  "lang_code": "en",
+  "lang_name": "English",
+  "lang_flag": "🇬🇧",
+  "commands": {
+    "start": "Start",
+    "register": "Register your team",
+    "tasks": "List active tasks",
+    "complete": "Complete a task",
+    "events": "Scenarios & events",
+    "score": "Leaderboard",
+    "profile": "My profile",
+    "duel": "Challenge a team",
+    "score_jury": "Submit jury score",
+    "jury_result": "Show jury results",
+    "language": "Change language",
+    "help": "Help"
+  },
+  "start": {
+    "welcome_back": "🔥 Welcome back, *{team_name}*!\nRole: {role}\n`{bar}` {bp} BP\n\nType /help for commands.",
+    "welcome_new": "🔥 Welcome to *{brand_name}*!\n_{brand_full}_\n\nTo begin:\n`/register <team_name>`"
+  },
+  "register": {
+    "already_registered": "You're already registered! Type /profile.",
+    "usage": "Usage: `/register <team_name>`",
+    "success": "✅ *{team_name}* registered!\n\nNow pick your team role:",
+    "choose_role": "⚔️ Choose your team role:"
+  },
+  "role": {
+    "selected": "⚔️ Role selected: *{emoji} {name}*\n\nStarting attributes:\n{stats}\n\nType /tasks to begin! 🚀"
+  },
+  "tasks": {
+    "header": "📋 *Active Tasks*",
+    "stage_active": "\n⚡ Stage *{stage_name}* active — `{mult}x XP`\n",
+    "item": "{status} *[{id}]* *{title}*\n   `+{xp} BP` · {difficulty}\n   {description}\n",
+    "bonus_tag": " _(x{mult})_",
+    "footer": "\nTo complete: `/complete <id> <proof_link>`",
+    "ids_label": "Task IDs: "
+  },
+  "complete": {
+    "usage": "Usage: `/complete <task_id> <proof_link>`\nSee task IDs with /tasks",
+    "invalid_task": "❌ `{id}` is invalid, inactive, or its scenario is not active.",
+    "already_done": "You've already completed this task! ✅",
+    "submitted": "📨 Submission for *{title}* sent.\n⏳ Awaiting approval!"
+  },
+  "approval": {
+    "approved": "🎉 *Task approved!*\n\n*{title}*\n+*{xp} BP*{bonus}\n\nTeam total BP: *{team_bp}*",
+    "leveled_up": "\n\n🆙 *Level up!* Lv.{level}",
+    "level_reward": " +{reward} SP bonus!",
+    "attr_changes": "\n📊 Attribute contribution: {changes}",
+    "badge_earned": "\n🏅 *{name}* badge earned!",
+    "unlocked_tasks": "\n🔓 New task unlocked: {tasks}",
+    "rejected": "❌ *{title}* was rejected.\nUpdate your proof and try again.",
+    "group_announce": "🌿 *{team}* completed *{title}*! +{xp} BP"
+  },
+  "admin_notify": {
+    "approval_request": "📬 *Task Approval Request #{id}*\n\nTeam: *{team}*\nTask: *{title}*\nType: `{type}` · {difficulty}\nProof: {proof}"
+  },
+  "score": {
+    "header_global": "🏆 *{brand} — Global Leaderboard*\n",
+    "header_local": "🏆 *{brand} — Local Rankings*\n",
+    "row": "{medal} *{team}* · {role}\n   `{bar}` {bp} BP\n",
+    "empty": "No registered teams yet."
+  },
+  "profile": {
+    "header": "👤 *{team}*\nRole: {role}\n`{bar}` {bp} BP\n\nCompleted: *{done}/{total}*\n\n*Attributes:*\n{stats}",
+    "jury_section": "\n\n*Jury Scores:*\n{scores}",
+    "badges_section": "\n\n*Badges:* {badges}",
+    "not_registered": "❌ Not registered. Type /register."
+  },
+  "duel": {
+    "usage": "Usage: `/duel <opponent_name>`",
+    "not_found": "*{name}* not found. Check /score.",
+    "self": "You cannot challenge yourself!",
+    "result": "⚔️ *Climate Duel*\n\n*{challenger}* — {c_score}\n*{defender}* — {d_score}\n\n🏆 *{winner}* wins! +{xp} SP\n{attr}",
+    "group_announce": "⚔️ *{challenger}* vs *{defender}* → *{winner}* wins!"
+  },
+  "events": {
+    "header": "📅 *Event & Scenario Status*\n",
+    "scenario_active": "🔥 *Active Scenario:* {name}\n   Stage: *{stage}* · `{mult}x XP`\n",
+    "no_scenario": "○ No active scenario.\n",
+    "event_row": "{emoji} *{title}*\n   `{date}` · {type}\n",
+    "task_count": "   Tasks: *{done}* completed\n"
+  },
+  "jury": {
+    "disabled": "Jury system is not active.",
+    "not_member": "This command is for jury members only.",
+    "usage": "Usage: `/score_jury <team_name> <criterion_id> <0-100>`\nCriteria: {criteria}",
+    "team_not_found": "*{name}* not found.",
+    "criterion_not_found": "Criterion `{id}` not found.",
+    "score_range": "Score must be between {min} and {max}.",
+    "saved": "✅ *{team}* — {emoji} {criterion}: *{score}*\n_Saved._",
+    "results_header": "⚖️ *Jury Results*\n",
+    "results_row": "*{team}* — Total: `{total}`\n{scores}\n",
+    "results_empty": "No jury scores yet."
+  },
+  "language": {
+    "changed": "🇬🇧 Language set to *English*.",
+    "usage": "Usage: `/language <code>`\nAvailable: `tr` (Türkçe), `en` (English)"
+  },
+  "admin": {
+    "xp_usage": "Usage: `/xp <team_name> <amount>`",
+    "xp_not_found": "Team not found.",
+    "xp_success": "✅ *{team}* → {sign}{amount} XP",
+    "announce_usage": "Usage: `/announce <message>`",
+    "announce_sent": "✅ Announcement sent to all groups.",
+    "unauthorized": "Unauthorized."
+  },
+  "help": {
+    "text": "🔥 *{brand} Commands*\n\n*/register <name>* — Register team\n*/tasks* — Active tasks\n*/complete <id> <proof>* — Submit task\n*/events* — Scenario & events\n*/score* — Leaderboard\n*/profile* — My profile\n*/duel <opponent>* — Challenge\n*/language <code>* — Change language (tr/en)\n\n_Jury:_ `/score_jury`, `/jury_result`\n_Admin:_ `/xp`, `/announce`"
+  },
+  "scenario": {
+    "started": "🔥 *{scenario_name}* started!\n*{stage_name}*: {description}",
+    "advanced": "🔥 *{stage_name}* begins!\n{description}",
+    "completed": "🏁 {message}",
+    "stopped": "⏹ Scenario stopped.",
+    "xp_bonus": "\n⚡ XP multiplier: *{mult}x* this stage"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "legendary": "Legendary"
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "db": "Database error. Please contact an administrator.",
+    "not_registered": "❌ Not registered. Type /register to begin."
+  }
+}

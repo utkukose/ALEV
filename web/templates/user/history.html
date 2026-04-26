@@ -1,0 +1,41 @@
+{% extends "shared/base.html" %}
+{% block title %}{{ brand.name }} — Geçmiş{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{% if lang=="tr" %}Görev <span>Geçmişi</span>{% else %}Task <span>History</span>{% endif %}</h1>
+  <div class="page-sub">{{ gecmis|length }} {% if lang=="tr" %}kayıt{% else %}records{% endif %}</div>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden">
+  {% if gecmis %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>{% if lang=="tr" %}Görev{% else %}Task{% endif %}</th><th>BP</th><th>{% if lang=="tr" %}Tarih{% else %}Date{% endif %}</th><th>{% if lang=="tr" %}Durum{% else %}Status{% endif %}</th>
+      </tr></thead>
+      <tbody>
+        {% for g in gecmis %}
+        <tr>
+          <td style="color:var(--white);font-weight:600">{{ g.gorev_id }}</td>
+          <td>
+            <span style="color:var(--amber);font-family:var(--font-mono);font-weight:700">
+              +{{ "{:,}".format(g.xp_earned) }}
+            </span>
+          </td>
+          <td style="font-family:var(--font-mono);font-size:.78rem;color:var(--mute)">
+            {{ g.zaman.strftime('%d.%m %H:%M') if g.zaman else '—' }}
+          </td>
+          <td><span class="badge badge-ok">{% if lang=="tr" %}Onaylandı{% else %}Approved{% endif %}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="padding:3rem;text-align:center;color:var(--mute);font-family:var(--font-mono);font-size:.82rem">
+    {% if lang=="tr" %}Henüz tamamlanan görev yok{% else %}No completed tasks yet{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

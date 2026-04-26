@@ -1,0 +1,306 @@
+{% extends "shared/admin_base.html" %}
+{% block title %}{{ scenario.name }} — {{ brand.name }}{% endblock %}
+{% block tbar_title %}{{ scenario.name }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="/admin" class="bc-link">{{ t.admin.events }}</a>
+<span class="bc-sep">›</span>
+<a href="/admin/events/{{ event.id }}" class="bc-link">{{ event.name }}</a>
+<span class="bc-sep">›</span>
+<span class="bc-current">{{ scenario.name }}</span>
+{% endblock %}
+
+{% block sec_titles %}{"stages":"{{ t.scenarios.stages }}","tasks":"{{ t.event_detail.tasks }}"}{% endblock %}
+
+{% block help_content %}
+<div class="help-section">
+  <div class="help-section-title">◈ {{ t.help.scenario_flow }}</div>
+  <div class="help-text">{{ t.help.scenario_desc }}</div>
+</div>
+<div class="help-tip">{{ t.help.scenario_tip }}</div>
+<hr style="border:none;border-top:1px solid var(--b1);margin:.75rem 0">
+<div class="help-section">
+  <div class="help-section-title">◻ {{ t.help.task_flow }}</div>
+  <div class="help-text">{{ t.help.task_desc }}</div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div class="sbsec">{{ event.name[:18] }}{% if event.name|length>18 %}…{% endif %}</div>
+<a class="sblink" href="/admin/events/{{ event.id }}"><span class="sbico">←</span>{{ t.admin.events }}</a>
+<div class="sbsec">{{ t.event_detail.scenarios }}</div>
+<button type="button" class="sblink on" onclick="showSec('stages',this)"><span class="sbico">◈</span>{{ t.scenarios.stages }}</button>
+<button type="button" class="sblink" onclick="showSec('tasks',this)"><span class="sbico">◻</span>{{ t.event_detail.tasks }}</button>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.stage-card{background:var(--bg3);border:1.5px solid var(--b1);border-radius:12px;padding:1.1rem;margin-bottom:.65rem;transition:all .2s;animation:fadeUp .3s ease both}
+.stage-card:hover{border-color:var(--b2)}
+.stage-card.current{border-color:var(--ac);background:var(--bg2)}
+.stage-num{width:28px;height:28px;border-radius:50%;background:var(--b1);color:var(--di);font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace}
+.stage-card.current .stage-num{background:var(--ac);color:#0d0e0f}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--mu);margin-bottom:1.5rem;font-family:'DM Mono',monospace">
+  <a href="/admin" style="color:var(--mu);transition:color .15s" onmouseover="this.style.color='var(--ac)'" onmouseout="this.style.color='var(--mu)'">{{ t.admin.events }}</a>
+  <span>›</span>
+  <a href="/admin/events/{{ event.id }}" style="color:var(--mu);transition:color .15s" onmouseover="this.style.color='var(--ac)'" onmouseout="this.style.color='var(--mu)'">{{ event.name }}</a>
+  <span>›</span>
+  <span style="color:var(--wh)">{{ scenario.name }}</span>
+</nav>
+
+<!-- ═══ AŞAMALAR ═══ -->
+<div id="sec-stages" class="sec on">
+  <div class="fxc jb mb2" style="flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:800;color:var(--wh)">{{ scenario.name }}</h1>
+      <div style="font-size:.8rem;font-family:'DM Mono',monospace;color:var(--mu)">
+        {{ t.common.status }}: <span class="tacc">{{ scenario.status }}</span>
+        {% if scenario.status != 'active' %}
+        · <button type="button" class="btn bok_ bxs tip" data-tip="{{ t.scenarios.activate }}" onclick="activateScenario()">▶</button>
+        {% endif %}
+      </div>
+    </div>
+    <div class="fxc gap">
+      {% if scenario.status == 'active' %}
+      <button type="button" class="btn bin_ bsm tip" data-tip="{{ t.scenarios.advance }}" onclick="advanceStage()">⏭ {{ t.scenarios.advance }}</button>
+      {% endif %}
+      <button type="button" class="btn bp bsm" onclick="openModal('stage-modal');clearStageForm()">+ {{ t.scenarios.add_stage }}</button>
+    </div>
+  </div>
+
+  <div class="sec-desc"><div class="sec-desc-icon">◈</div><div class="sec-desc-text"><strong>{{ t.scenarios.stages }}</strong> — {{ t.help.scenario_desc }}</div></div>
+
+  {% if not stages %}
+  <div style="text-align:center;padding:3rem;color:var(--mu)">
+    <div style="font-size:2.5rem;margin-bottom:1rem">◈</div>
+    <div style="font-size:.95rem;font-weight:600;color:var(--so);margin-bottom:.5rem">{{ t.scenarios.no_stages }}</div>
+    <div style="font-size:.82rem;font-family:'DM Mono',monospace;margin-bottom:1.5rem">{{ t.scenarios.no_stages_desc }}</div>
+    <button type="button" class="btn bp bsm" onclick="openModal('stage-modal');clearStageForm()">+ {{ t.scenarios.add_stage }}</button>
+  </div>
+  {% else %}
+  <div id="stages-list">
+    {% for s in stages %}
+    <div class="stage-card {% if scenario.current_stage_id == s.id %}current{% endif %}" id="stage-{{ s.id }}">
+      <div class="fxc jb">
+        <div class="fxc gapm">
+          <div class="stage-num">{{ s.stage_order }}</div>
+          <div>
+            <div style="font-weight:700;color:var(--wh);font-size:.95rem">
+              {{ s.name }}
+              {% if s.is_final %}<span class="bdg bac" style="margin-left:.4rem">{{ t.scenarios.final }}</span>{% endif %}
+              {% if scenario.current_stage_id == s.id %}<span class="bdg bok2" style="margin-left:.4rem">{{ t.scenarios.current }}</span>{% endif %}
+            </div>
+            {% if s.description %}<div style="font-size:.78rem;color:var(--di);margin-top:.15rem">{{ s.description }}</div>{% endif %}
+            <div class="fxc gap" style="margin-top:.4rem">
+              <span class="bdg bmu">{{ s.duration_minutes }}{{ t.common.minutes if t.common.minutes is defined else 'min' }}</span>
+              <span class="bdg bac">×{{ s.xp_multiplier }} BP</span>
+            </div>
+          </div>
+        </div>
+        <div class="fxc gap">
+          <button type="button" class="btn bg_ bxs" onclick='editStage({{ s|tojson }})'>✎</button>
+          <button type="button" class="btn ber_ bxs" onclick="deleteStage({{ s.id }})">✕</button>
+        </div>
+      </div>
+      {% if s.unlock_message_tr %}
+      <div style="margin-top:.65rem;background:var(--bg4);border-radius:7px;padding:.45rem .7rem;font-size:.78rem;color:var(--so);border-left:2px solid var(--ac)">
+        📣 {{ s.unlock_message_tr }}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- ═══ GÖREVLER ═══ -->
+<div id="sec-tasks" class="sec">
+  <div class="fxc jb mb3">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{{ t.event_detail.tasks }}</h2>
+    <a href="/admin/events/{{ event.id }}" class="btn bg_ bsm">{{ t.event_detail.tasks }} →</a>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead><tr>
+        <th>{{ t.tasks.task_title }}</th>
+        <th>{{ t.tasks.stage_col }}</th>
+        <th>{{ t.tasks.difficulty }}</th>
+        <th>BP</th>
+      </tr></thead>
+      <tbody>
+        {% for tk in tasks %}{% if tk.stage_id %}
+        <tr>
+          <td style="font-weight:600;color:var(--wh)">{{ tk.title or tk.title_tr }}</td>
+          <td style="font-size:.8rem;color:var(--mu)">{{ tk.stage_name }}</td>
+          <td><span class="diff-{{ tk.difficulty }}">{{ tk.difficulty }}</span></td>
+          <td style="font-family:'DM Mono',monospace;color:var(--ac)">+{{ tk.sp_reward }}</td>
+        </tr>
+        {% endif %}{% else %}
+        <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--mu)">{{ t.event_detail.no_tasks }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Senaryo Bonus Yapılandırma -->
+<div id="sec-bonus" class="sec" style="display:none;margin-bottom:1.5rem">
+  <div class="cacc">
+    <div class="ctitle">
+      {% if lang=="tr" %}Senaryo Tamamlama Bonusu{% else %}Scenario Completion Bonus{% endif %}
+    </div>
+    <div class="sec-desc" style="margin-bottom:1rem">
+      <div class="sec-desc-icon">🏆</div>
+      <div class="sec-desc-text">
+        {% if lang=="tr" %}
+        Bir takım bu senaryodaki <strong>minimum görev sayısını</strong> tamamladığında bonus BP ve rozet kazanır.
+        İlk tamamlayan takım daha fazla XP alır.
+        {% else %}
+        When a team completes the <strong>minimum number of tasks</strong>, they earn bonus XP and a badge.
+        The first team to complete gets more XP.
+        {% endif %}
+      </div>
+    </div>
+    <div class="frow c3">
+      <div class="fg">
+        <label class="fl">{% if lang=="tr" %}Min. Görev Sayısı{% else %}Min. Tasks Required{% endif %}</label>
+        <input class="fi" type="number" id="sc-min-tasks" value="{{ scenario.min_tasks_required or 1 }}" min="1">
+        <div class="fh">{% if lang=="tr" %}Bu kadar görev tamamlanınca bonus tetiklenir{% else %}Bonus triggers when this many tasks approved{% endif %}</div>
+      </div>
+      <div class="fg">
+        <label class="fl">{% if lang=="tr" %}Bonus XP (İlk){% else %}First Bonus XP{% endif %}</label>
+        <input class="fi" type="number" id="sc-first-xp" value="{{ scenario.first_bonus_sp or 1000 }}">
+        <div class="fh">{% if lang=="tr" %}İlk tamamlayan takıma{% else %}For the first completing team{% endif %}</div>
+      </div>
+      <div class="fg">
+        <label class="fl">{% if lang=="tr" %}Bonus XP (Diğer){% else %}Bonus XP (Others){% endif %}</label>
+        <input class="fi" type="number" id="sc-bonus-xp" value="{{ scenario.bonus_sp or 500 }}">
+        <div class="fh">{% if lang=="tr" %}Diğer tamamlayanlar{% else %}Other completing teams{% endif %}</div>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">{% if lang=="tr" %}Rozet Adı{% else %}Badge Name{% endif %}</label>
+      <input class="fi" id="sc-badge" value="{{ scenario.bonus_badge or '' }}" placeholder="{% if lang=='tr' %}Sürdürülebilirlik Ustası{% else %}Sustainability Master{% endif %}">
+      <div class="fh">{% if lang=="tr" %}Boş bırakılırsa rozet verilmez{% else %}Leave empty for no badge{% endif %}</div>
+    </div>
+    <button type="button" class="btn bp bsm" onclick="saveBonus()">
+      {% if lang=="tr" %}Bonus Ayarlarını Kaydet{% else %}Save Bonus Settings{% endif %}
+    </button>
+  </div>
+</div>
+
+<!-- Aşama Modal -->
+<div class="mbg" id="stage-modal">
+<div class="modal">
+  <div class="mtitle" id="stage-mtitle">◈ {{ t.scenarios.add_stage }}</div>
+  <input type="hidden" id="stage-id">
+  <div class="frow c2">
+    <div class="fg"><label class="fl">{{ t.scenarios.stage_order }}</label><input class="fi" type="number" id="stage-order" value="1"></div>
+    <div class="fg"><label class="fl">{{ t.scenarios.duration }}</label><input class="fi" type="number" id="stage-dur" value="60"></div>
+  </div>
+  <div class="fg"><label class="fl">{{ t.scenarios.stage_name }}</label><input class="fi" id="stage-name"></div>
+  <div class="fg"><label class="fl">{{ t.common.description }}</label><textarea class="ft" id="stage-desc" rows="2"></textarea></div>
+  <div class="frow c2">
+    <div class="fg"><label class="fl">{{ t.scenarios.xp_mult }}</label><input class="fi" type="number" step="0.1" id="stage-xp" value="1.0"></div>
+    <div class="fg" style="display:flex;align-items:center;gap:.75rem;padding-top:1.5rem">
+      <label class="tgl"><input type="checkbox" id="stage-final"><span class="tgls"></span></label>
+      <span style="font-size:.88rem">{{ t.scenarios.is_final }}</span>
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">{{ t.scenarios.unlock_msg }}</label>
+    <input class="fi" id="stage-msg">
+    <div class="fh">{{ t.scenarios.unlock_msg_hint }}</div>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('stage-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveStage()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var SID={{ scenario.id }};
+var EID={{ event.id }};
+var LNG=document.documentElement.getAttribute('lang')||'tr';
+
+function clearStageForm(){
+  document.getElementById('stage-id').value='';
+  document.getElementById('stage-name').value='';
+  document.getElementById('stage-desc').value='';
+  document.getElementById('stage-msg').value='';
+  document.getElementById('stage-order').value=document.querySelectorAll('.stage-card').length+1;
+  document.getElementById('stage-dur').value=60;
+  document.getElementById('stage-xp').value=1.0;
+  document.getElementById('stage-final').checked=false;
+  document.getElementById('stage-mtitle').textContent='◈ {{ t.scenarios.add_stage }}';
+}
+function editStage(s){
+  document.getElementById('stage-id').value=s.id;
+  document.getElementById('stage-name').value=s.name;
+  document.getElementById('stage-desc').value=s.description||'';
+  document.getElementById('stage-order').value=s.stage_order;
+  document.getElementById('stage-dur').value=s.duration_minutes;
+  document.getElementById('stage-xp').value=s.xp_multiplier;
+  document.getElementById('stage-final').checked=s.is_final;
+  document.getElementById('stage-msg').value=s.unlock_message_tr||'';
+  document.getElementById('stage-mtitle').textContent='◈ {{ t.common.edit }}';
+  openModal('stage-modal');
+}
+async function saveStage(){
+  var name=document.getElementById('stage-name').value.trim();
+  if(!name){toast(LNG==='tr'?'Ad gerekli':'Name required','e');return}
+  var msg=document.getElementById('stage-msg').value;
+  var d={name:name,description:document.getElementById('stage-desc').value,
+    stage_order:parseInt(document.getElementById('stage-order').value)||1,
+    duration_minutes:parseInt(document.getElementById('stage-dur').value)||60,
+    xp_multiplier:parseFloat(document.getElementById('stage-xp').value)||1.0,
+    is_final:document.getElementById('stage-final').checked,
+    unlock_message_tr:msg,unlock_message_en:msg};
+  var sid=document.getElementById('stage-id').value;
+  if(sid) d.id=parseInt(sid);
+  var r=await apiFetch('POST','/api/content/scenarios/'+SID+'/stages',d);
+  if(r&&r.ok){toast('✓','s');closeModal('stage-modal');setTimeout(function(){location.reload()},600)}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function deleteStage(id){
+  if(!confirm(LNG==='tr'?'Silinsin mi?':'Delete?'))return;
+  var r=await apiFetch('DELETE','/api/content/stages/'+id);
+  if(r&&r.ok){document.getElementById('stage-'+id).remove();toast('✓','s')}
+}
+async function activateScenario(){
+  var r=await apiFetch('POST','/api/content/scenarios/'+SID+'/activate');
+  if(r&&r.ok){toast('✓','s');setTimeout(function(){location.reload()},600)}
+}
+function toggleBonus(){
+  var el=document.getElementById('sec-bonus');
+  if(el) el.style.display=(el.style.display==='none'?'block':'none');
+}
+async function saveBonus(){
+  var r=await apiFetch('PUT','/api/content/scenarios/'+SID,{
+    name:'{{ scenario.name }}',
+    description:'{{ scenario.description or "" }}',
+    auto_advance:false,
+    min_tasks_required:parseInt(document.getElementById('sc-min-tasks').value)||1,
+    bonus_sp:parseInt(document.getElementById('sc-bonus-xp').value)||500,
+    first_bonus_sp:parseInt(document.getElementById('sc-first-xp').value)||1000,
+    bonus_badge:document.getElementById('sc-badge').value
+  });
+  if(r&&r.ok){toast(LNG==="tr"?"Bonus ayarlari kaydedildi":"Bonus settings saved","s")}
+  else toast((r&&r.error)||"Hata","e");
+}
+async function advanceStage(){
+  if(!confirm(LNG==='tr'?'Sonraki aşamaya geç?':'Advance to next stage?'))return;
+  var r=await apiFetch('POST','/api/content/scenarios/'+SID+'/advance');
+  if(r&&r.ok){toast('⏭ '+r.stage.name,'s');setTimeout(function(){location.reload()},800)}
+  else toast(LNG==='tr'?'Son aşama':'Last stage','w');
+}
+</script>
+{% endblock %}

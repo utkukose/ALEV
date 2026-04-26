@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ brand.name }} — Giriş</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d0e0f;--ink-2:#141618;--ink-3:#1c1f22;--wire:#2e3438;--wire-2:#3d444b;--mute:#5a6370;--dim:#8a95a0;--soft:#b8c2cc;--white:#ffffff;--amber:#f59e0b;--amber-d:#d97706;--font:'Outfit',system-ui,sans-serif;--mono:'DM Mono',monospace;--r:8px;--glow:0 0 0 3px rgba(245,158,11,.18)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--ink);color:var(--soft);min-height:100vh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0,rgba(245,158,11,.06) 0,transparent 60%);pointer-events:none}
+nav{height:52px;background:rgba(13,14,15,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--wire);padding:0 1.5rem;display:flex;align-items:center}
+.brand{font-weight:900;font-size:1rem;color:var(--white);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:.4rem}
+.brand-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+.panel{width:100%;max-width:420px}
+.hero{text-align:center;margin-bottom:2rem}
+.hero h1{font-size:2rem;font-weight:900;color:var(--white);letter-spacing:-.02em}
+.hero h1 span{color:var(--amber)}
+.hero p{font-size:.85rem;color:var(--mute);margin-top:.5rem;font-family:var(--mono)}
+.card{background:var(--ink-2);border:1px solid var(--wire);border-radius:16px;padding:2rem;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);opacity:.4}
+.label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--mute);margin-bottom:1.25rem;font-family:var(--mono)}
+.fg{margin-bottom:1rem}
+.fl{display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mute);margin-bottom:.4rem;font-family:var(--mono)}
+.fi{width:100%;padding:.65rem .9rem;background:var(--ink-3);border:1px solid var(--wire-2);border-radius:var(--r);color:var(--white);font-size:.9rem;font-family:var(--font);transition:border-color .15s}
+.fi:focus{outline:none;border-color:var(--amber);box-shadow:var(--glow)}
+.fi::placeholder{color:var(--mute)}
+.btn{width:100%;padding:.7rem;border-radius:var(--r);font-size:.875rem;font-weight:700;font-family:var(--font);cursor:pointer;border:none;background:var(--amber);color:var(--ink);transition:all .15s;margin-top:.25rem}
+.btn:hover{background:var(--amber-d);box-shadow:0 6px 20px rgba(245,158,11,.25)}
+.hint{text-align:center;margin-top:1.25rem;font-size:.75rem;color:var(--mute);font-family:var(--mono);line-height:1.6}
+
+[data-theme="light"] {
+  --ink:#f8f9fa;--ink-2:#ffffff;--ink-3:#f1f3f5;--ink-4:#e9ecef;
+  --wire:#dee2e6;--wire-2:#ced4da;--mute:#868e96;--dim:#495057;
+  --soft:#343a40;--white:#0d0e0f;
+  --amber:#d97706;--amber-d:#b45309;
+  --ok:#059669;--err:#dc2626;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+}
+</style>
+<script>(function(){var t=localStorage.getItem('alev-theme');var sys=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',t||sys);})();</script>
+</head>
+<body>
+<script>
+(function(){
+  const s=localStorage.getItem('alev-theme');
+  const sys=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',s||sys);
+})();
+</script>
+<nav><div class="brand"><span class="brand-dot"></span>{{ brand.name }}</div></nav>
+<main>
+  <div class="panel">
+    <div class="hero">
+      <h1>Hoş geldiniz,<br><span>oyuncu</span></h1>
+      <p>{{ brand.full_name }}</p>
+    <p style="font-size:.72rem;margin-top:.2rem">Telegram ID ile kimliğinizi doğrulayın</p>
+    </div>
+    <div class="card">
+      <div class="label">Oyuncu Girişi</div>
+      <form method="post" action="/login">
+        <div class="fg">
+          <label class="fl">Telegram ID</label>
+          <input class="fi" type="number" name="telegram_id" placeholder="1234567890" autofocus>
+        </div>
+        <button class="btn">Devam Et →</button>
+      </form>
+      <div class="hint">Telegram ID'nizi @userinfobot ile öğrenebilirsiniz</div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

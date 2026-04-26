@@ -1,0 +1,198 @@
+{% extends "shared/base.html" %}
+{% block title %}{{ team.name }} — {% if lang=='tr' %}Takım Profili{% else %}Team Profile{% endif %}{% endblock %}
+
+{% block extra_css %}
+@media(max-width:640px){
+  .g2{grid-template-columns:1fr}
+  .card{padding:1rem}
+  .attr-bar-wrap{margin-bottom:.5rem}
+}
+{% endblock %}
+
+{% block content %}
+<div class="container" style="position:relative;z-index:1">
+
+  <!-- Giriş Ekranı -->
+  <div id="login-screen" style="max-width:420px;margin:4rem auto;{% if logged_in %}display:none{% endif %}">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:2rem;margin-bottom:.5rem">🔐</div>
+      <h1 style="font-size:1.4rem;font-weight:900;color:var(--wh)">
+        {% if lang=='tr' %}Takım Profili{% else %}Team Profile{% endif %}
+      </h1>
+      <div style="font-size:.83rem;color:var(--mu);margin-top:.4rem">
+        {% if lang=='tr' %}Profilinizi görüntülemek için takım ID ve kullanıcı adınızı girin{% else %}Enter your team ID and display name to view your profile{% endif %}
+      </div>
+    </div>
+    <div id="login-err" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);border-radius:9px;padding:.6rem .85rem;color:var(--er);font-size:.85rem;margin-bottom:.75rem"></div>
+    <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:1.5rem">
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:.38rem;font-family:'DM Mono',monospace">
+          {% if lang=='tr' %}Davet Kodu{% else %}Invite Code{% endif %} *
+        </label>
+        <input id="inp-teamid" type="text" placeholder="ABC123" style="width:100%;padding:.65rem .9rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:9px;color:var(--so);font-size:.92rem;font-family:'DM Mono',monospace;outline:none;text-transform:uppercase;letter-spacing:.1em"  onfocus="this.style.borderColor='var(--ac)'" onblur="this.style.borderColor='var(--b2)'" oninput="this.value=this.value.toUpperCase()"
+          style="width:100%;padding:.65rem .9rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:9px;color:var(--so);font-size:.92rem;font-family:'Outfit',sans-serif;outline:none"
+          onfocus="this.style.borderColor='var(--ac)'" onblur="this.style.borderColor='var(--b2)'">
+        <div style="font-size:.7rem;color:var(--mu);margin-top:.3rem;font-family:'DM Mono',monospace">
+          {% if lang=='tr' %}Takım liderinizden aldığınız kod{% else %}Code from your team leader{% endif %}
+        </div>
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <label style="display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:.38rem;font-family:'DM Mono',monospace">
+          {% if lang=='tr' %}Kullanıcı Adı{% else %}Username{% endif %} *
+        </label>
+        <input id="inp-username" type="text" placeholder="{% if lang=='tr' %}kullanıcı_adı{% else %}username{% endif %}"
+          style="width:100%;padding:.65rem .9rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:9px;color:var(--so);font-size:.92rem;font-family:'Outfit',sans-serif;outline:none"
+          onfocus="this.style.borderColor='var(--ac)'" onblur="this.style.borderColor='var(--b2)'"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button onclick="doLogin()"
+        style="width:100%;padding:.72rem;border-radius:9px;font-size:.92rem;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;border:none;background:var(--ac);color:#0d0e0f;transition:all .18s"
+        onmouseover="this.style.background='var(--acd)'" onmouseout="this.style.background='var(--ac)'">
+        {% if lang=='tr' %}Profili Görüntüle →{% else %}View Profile →{% endif %}
+      </button>
+    </div>
+  </div>
+
+  <!-- Profil İçeriği (gizli, giriş sonrası gösterilir) -->
+  {% if logged_in and team %}
+<div id="profile-screen" style="display:block">
+    <div class="card" style="margin-bottom:1.5rem;border-top:2px solid var(--ac)">
+      <div style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
+        <div style="font-size:2.5rem">{{ team.role_emoji or '⚔' }}</div>
+        <div style="flex:1">
+          <h1 style="font-size:1.5rem;font-weight:900;color:var(--wh)">{{ team.name }}</h1>
+          <div style="font-size:.82rem;font-family:'DM Mono',monospace;color:var(--mu)">
+            {{ team.role_name or '—' }} · {{ event.name }}
+          </div>
+          <div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap">
+            <span style="font-family:'DM Mono',monospace;font-size:.88rem;font-weight:800;color:var(--ac)">{{ "{:,}".format(team.xp or 0) }} {% if lang=='tr' %}BP{% else %}SP{% endif %}</span>
+            {% if team.invite_code %}
+            <span class="bdg bmu" style="font-family:'DM Mono',monospace;letter-spacing:.1em">{{ team.invite_code }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <a href="/profile/logout" style="align-self:flex-start;padding:.4rem .85rem;border-radius:8px;border:1px solid var(--b2);font-size:.78rem;color:var(--mu);text-decoration:none" onmouseover="this.style.color='var(--er)';this.style.borderColor='var(--er)'" onmouseout="this.style.color='var(--mu)';this.style.borderColor='var(--b2)'">{% if lang=='tr' %}🚪 Çıkış{% else %}🚪 Sign out{% endif %}</a>
+    </div>
+  </div>
+
+    <div class="g2">
+      <div>
+        {% if attrs %}
+        <div class="card" style="margin-bottom:1rem">
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--mu);margin-bottom:.85rem;font-family:'DM Mono',monospace">
+            {% if lang=='tr' %}RPG Nitelikleri{% else %}RPG Attributes{% endif %}
+          </div>
+          {% for a in attrs %}
+          <div class="attr-bar-wrap">
+            <div class="attr-name">
+              <span>{{ a.emoji }} {{ a.name_tr if lang=='tr' else a.name_en }}</span>
+              <span style="color:var(--ac)">{{ team.attributes[a.key] if (team.attributes is mapping and a.key in team.attributes) else a.default_val }}/{{ a.max_val }}</span>
+            </div>
+            <div class="attr-bar">
+              <div class="attr-fill" style="width:{{ (((team.attributes[a.key] if (team.attributes is mapping and a.key in team.attributes) else a.default_val) - a.min_val) / (a.max_val - a.min_val) * 100)|round }}%"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="card">
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--mu);margin-bottom:.85rem;font-family:'DM Mono',monospace">
+            {% if lang=='tr' %}Takım Üyeleri{% else %}Team Members{% endif %}
+          </div>
+          {% for m in members %}
+          <div style="display:flex;align-items:center;gap:.65rem;padding:.4rem 0;{% if not loop.last %}border-bottom:1px solid var(--b1){% endif %}">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--acl);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--ac)">
+              {{ (m.display_name or m.username or '?')[0].upper() }}
+            </div>
+            <div style="flex:1">
+              <div style="font-size:.88rem;font-weight:600;color:var(--wh)">
+                {{ m.display_name or m.username or 'ID:'+m.telegram_id|string }}
+              </div>
+            </div>
+            <span class="bdg {% if m.role=='leader' %}bac{% else %}bmu{% endif %}">{{ m.role }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--mu);margin-bottom:.85rem;font-family:'DM Mono',monospace">
+            {% if lang=='tr' %}Görev Geçmişi{% else %}Task History{% endif %}
+          </div>
+          {% for h in history[:15] %}
+          <div class="history-row">
+            <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:{% if h.status=='approved' %}rgba(16,185,129,.1){% elif h.status=='rejected' %}rgba(239,68,68,.1){% else %}rgba(245,158,11,.1){% endif %}">
+              {% if h.status=='approved' %}✓{% elif h.status=='rejected' %}✗{% else %}⏳{% endif %}
+            </div>
+            <div style="flex:1">
+              <div style="font-size:.85rem;font-weight:600;color:var(--wh)">{{ h.title_tr if lang=='tr' else h.title_en }}</div>
+              <div style="font-size:.72rem;color:var(--mu);font-family:'DM Mono',monospace">{{ h.submitted_at|string|truncate(16,true,'') }}</div>
+            </div>
+            {% if h.status=='approved' %}
+            <span style="font-family:'DM Mono',monospace;font-size:.82rem;font-weight:700;color:var(--ok)">+{{ h.sp_reward }}</span>
+            {% endif %}
+          </div>
+          {% else %}
+          <div style="text-align:center;padding:1.5rem;color:var(--mu);font-size:.88rem">
+            {% if lang=='tr' %}Henüz görev tamamlanmamış{% else %}No tasks completed yet{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var LNG = '{{ lang }}';
+
+{% if not logged_in %}
+async function doLogin(){
+  var code     = document.getElementById('inp-teamid').value.trim().toUpperCase();
+  var username = document.getElementById('inp-username').value.trim().toLowerCase().replace('@','');
+  var errEl    = document.getElementById('login-err');
+  errEl.style.display = 'none';
+
+  if(!code){
+    errEl.textContent = LNG==='tr'?'Davet kodu gerekli':'Invite code is required';
+    errEl.style.display='block'; return;
+  }
+  if(!username){
+    errEl.textContent = LNG==='tr'?'Kullanıcı adı gerekli':'Username is required';
+    errEl.style.display='block'; return;
+  }
+
+  var btn = document.querySelector('#login-screen button[onclick="doLogin()"]');
+  if(btn){ btn.disabled=true; btn.textContent='...'; }
+
+  try {
+    var r = await fetch('/profile/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({invite_code: code, username: username})
+    });
+    var d = await r.json();
+    if(!d.ok){
+      errEl.textContent = d.error || (LNG==='tr'?'Hata':'Error');
+      errEl.style.display='block';
+      if(btn){ btn.disabled=false; btn.textContent=LNG==='tr'?'Profili Görüntüle →':'View Profile →'; }
+      return;
+    }
+    window.location.href = '/profile';
+  } catch(e) {
+    errEl.textContent = LNG==='tr'?'Bağlantı hatası':'Connection error';
+    errEl.style.display='block';
+    if(btn){ btn.disabled=false; btn.textContent=LNG==='tr'?'Profili Görüntüle →':'View Profile →'; }
+  }
+}
+{% endif %}
+</script>
+{% endblock %}

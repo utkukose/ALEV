@@ -1,0 +1,96 @@
+# ─────────────────────────────────────────────
+# ALEV — Görev Tanımları
+# Her görev buradan yönetilir. Yeni görev eklemek
+# için bir blok kopyalayıp id'yi değiştirin.
+# ─────────────────────────────────────────────
+
+tasks:
+  - id: "su_kalitesi_olcum"
+    title: "Burdur Gölü Su Kalitesi Ölçümü"
+    description: >
+      Bölgeden en az 5 farklı noktadan pH, sıcaklık
+      ve çözünmüş oksijen verisi toplayın.
+    type: su_kalitesi             # roles.yaml'daki bonus_task_types ile eşleşir
+    difficulty: orta              # kolay | orta | zor | efsane
+    xp_reward: 350
+    badge_reward: "su_senörü"     # kazanılacak rozet (badges.yaml'dan)
+    stat_rewards:                 # Tamamlanınca stat artışı
+      cevre_puani: 2
+      analitik: 1
+    proof_type: dosya_veya_link   # kanıt türü (bilgi amaçlı)
+    active: true
+    starts_at: null               # null = hemen aktif; "2026-04-20T09:00" gibi ISO tarih gir
+    ends_at: null                 # null = süresiz
+
+  - id: "karbon_hesaplayici"
+    title: "Karbon Ayak İzi Hesaplayıcı"
+    description: >
+      Göller Yöresi için yerel koşullara uyarlanmış
+      açık kaynak hesaplayıcı geliştirin.
+    type: analitik
+    difficulty: zor
+    xp_reward: 500
+    badge_reward: "kod_savascisi"
+    stat_rewards:
+      analitik: 3
+      guc: 1
+    proof_type: github_link
+    active: true
+    starts_at: null
+    ends_at: null
+
+  - id: "tur_katalogu"
+    title: "Yerel Tür Kataloğu"
+    description: >
+      Eğirdir ve çevresindeki endemik bitki/hayvan
+      türlerini belgeleyen veri tabanı oluşturun.
+    type: biyocesitlilik
+    difficulty: kolay
+    xp_reward: 280
+    badge_reward: "dogaci"
+    stat_rewards:
+      cevre_puani: 2
+    proof_type: dosya_veya_link
+    active: true
+    starts_at: null
+    ends_at: null
+
+  - id: "gunes_fizibilite"
+    title: "Güneş Enerjisi Fizibilite Raporu"
+    description: >
+      Bölgedeki 3 köy için mini güneş enerjisi
+      kurulum fizibilite raporu hazırlayın.
+    type: enerji
+    difficulty: orta
+    xp_reward: 420
+    badge_reward: "gunes_muhendisi"
+    stat_rewards:
+      guc: 2
+      cevre_puani: 1
+    proof_type: pdf
+    active: true
+    starts_at: null
+    ends_at: null
+
+  - id: "egitim_kampanyasi"
+    title: "İklim Farkındalık Kampanyası"
+    description: >
+      Yerel okullara yönelik interaktif iklim
+      eğitim materyali seti hazırlayın.
+    type: topluluk
+    difficulty: kolay
+    xp_reward: 320
+    badge_reward: "egitimci"
+    stat_rewards:
+      topluluk: 3
+    proof_type: dosya_veya_link
+    active: true
+    starts_at: null
+    ends_at: null
+
+# ─── Zorluk XP çarpanları ──────────────────
+difficulty_multipliers:
+  kolay: 1.0
+  orta: 1.0
+  zor: 1.0
+  efsane: 2.0                   # Efsane görevler 2x XP verir

@@ -1,0 +1,121 @@
+# ─────────────────────────────────────────────────────────
+# ALEV v2 — Eylem → Nitelik Haritası
+#
+# Her eylem türü hangi nitelikleri kaç puan değiştirir?
+# Burada tanımlayın — kod değiştirmenize gerek yok.
+#
+# Eylem türleri:
+#   task_complete   — Görev tamamlama (onaylandı)
+#   duel_win        — Düello kazanma
+#   duel_lose       — Düello kaybetme
+#   event_join      — Etkinliğe katılım
+#   jury_score      — Jüri puanı alma
+#   stage_complete  — Senaryo aşaması tamamlama
+#   bonus           — Admin manuel bonus
+# ─────────────────────────────────────────────────────────
+
+action_effects:
+
+  task_complete:
+    description: "Görev onaylandığında uygulanır"
+    # Görev türüne göre farklı nitelik etkileri
+    by_task_type:
+      su_kalitesi:
+        cevre_puani: +3
+        analitik: +1
+      biyocesitlilik:
+        cevre_puani: +3
+        guc: +1
+      enerji:
+        guc: +3
+        analitik: +1
+      altyapi:
+        guc: +4
+      analitik:
+        analitik: +4
+        cevre_puani: +1
+      tarim:
+        cevre_puani: +2
+        topluluk: +2
+      topluluk:
+        topluluk: +4
+    # Tüm görev türleri için genel etki (üstüne eklenir)
+    global:
+      cevre_puani: +1
+
+  duel_win:
+    description: "Düello kazanıldığında"
+    effects:
+      guc: +3
+      topluluk: +1
+
+  duel_lose:
+    description: "Düello kaybedildiğinde"
+    effects:
+      guc: +1        # Kaybetmek de deneyim kazandırır
+
+  event_join:
+    description: "Etkinliğe katılım"
+    effects:
+      topluluk: +2
+
+  jury_score:
+    description: "Jüriden puan alındığında (100 üzerinden normalize)"
+    # Jüri puanı 0-100 arasında; 50 baz puan olarak kabul edilir
+    # (puan - 50) / 10 oranında nitelik artışı uygulanır
+    base_score: 50
+    scale: 0.1
+    effects:
+      guc: scaled       # "scaled" = normalize edilmiş değer uygulanır
+      cevre_puani: scaled
+
+  stage_complete:
+    description: "Hackathon aşaması tamamlandığında"
+    effects:
+      guc: +5
+      analitik: +3
+      topluluk: +2
+
+  bonus:
+    description: "Admin manuel bonus"
+    effects: {}         # Admin istediği niteliği seçer
+
+# ─────────────────────────────────────────────────────────
+# Nitelik bağımlılıkları — kilit sistemi
+# Bir koşul sağlandığında yeni görev/özellik açılır
+# ─────────────────────────────────────────────────────────
+
+unlock_rules:
+  - id: "veri_goru_unlock"
+    description: "Analitik 8+ olunca veri görselleştirme görevi açılır"
+    condition:
+      attribute: analitik
+      operator: ">="
+      value: 8
+    unlocks:
+      task_ids: ["veri_gorsellestirme"]
+
+  - id: "efsane_duel_unlock"
+    description: "Güç 12+ olunca efsane düello hakkı kazanılır"
+    condition:
+      attribute: guc
+      operator: ">="
+      value: 12
+    unlocks:
+      feature: "legendary_duel"
+
+  - id: "topluluk_lider_unlock"
+    description: "Topluluk 10+ olunca lider rozeti açılır"
+    condition:
+      attribute: topluluk
+      operator: ">="
+      value: 10
+    unlocks:
+      badge_ids: ["topluluk_lideri"]
+
+  - id: "tam_ekip_unlock"
+    description: "Tüm nitelikler 5+ olunca 'Dengeli Takım' rozeti"
+    condition:
+      all_attributes_min: 5
+    unlocks:
+      badge_ids: ["dengeli_takim"]

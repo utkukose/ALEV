@@ -1,0 +1,147 @@
+# ─────────────────────────────────────────────────────────
+# ALEV v2 — Karar Ağacı Senaryo Tanımları
+#
+# Her takım /branch komutuyla kendi yolunu seçer.
+# type: choice  → Seçim sunulur, inline butonlar çıkar
+# type: task_set → Görev kolu açılır, o task_set'teki görevler görünür
+# type: end      → Senaryo bu kol için biter
+# ─────────────────────────────────────────────────────────
+
+branching_scenarios:
+  - id: "iklim_yolu"
+    name_tr: "İklim Yolu Senaryosu"
+    name_en: "Climate Path Scenario"
+    root_node: "alan_secimi"
+
+    nodes:
+      # ─── Kök: Alan seçimi ──────────────────
+      - id: "alan_secimi"
+        type: choice
+        title_tr: "Göller Yöresi'nde Odak Alanınızı Seçin"
+        title_en: "Choose Your Focus Area in the Lakes Region"
+        description_tr: >
+          Takımınızın uzmanlık alanına en uygun yolu seçin.
+          Bu seçim, size özel görev setini belirleyecek.
+        description_en: >
+          Choose the path that best fits your team's expertise.
+          This will determine your custom task set.
+        choices:
+          - id: "su_sec"
+            label_tr: "Su Ekosistemleri"
+            label_en: "Water Ecosystems"
+            emoji: "💧"
+            next_node: "su_alt_secim"
+            xp_bonus: 25
+
+          - id: "enerji_sec"
+            label_tr: "Yenilenebilir Enerji"
+            label_en: "Renewable Energy"
+            emoji: "⚡"
+            next_node: "enerji_alt_secim"
+            xp_bonus: 25
+
+          - id: "tarim_sec"
+            label_tr: "Sürdürülebilir Tarım"
+            label_en: "Sustainable Agriculture"
+            emoji: "🌾"
+            next_node: "tarim_kolu"
+            xp_bonus: 25
+
+      # ─── Su alt seçim ──────────────────────
+      - id: "su_alt_secim"
+        type: choice
+        title_tr: "Su Odağınızı Daraltın"
+        title_en: "Narrow Your Water Focus"
+        description_tr: "Su ekosisteminde hangi konuya odaklanmak istiyorsunuz?"
+        description_en: "Which aspect of water ecosystems will you focus on?"
+        choices:
+          - id: "su_kalite"
+            label_tr: "Su Kalitesi İzleme"
+            label_en: "Water Quality Monitoring"
+            emoji: "🔬"
+            next_node: "su_kalite_kolu"
+            xp_bonus: 0
+
+          - id: "su_tasarruf"
+            label_tr: "Su Tasarrufu Çözümleri"
+            label_en: "Water Conservation Solutions"
+            emoji: "💦"
+            next_node: "su_tasarruf_kolu"
+            xp_bonus: 0
+
+      # ─── Enerji alt seçim ──────────────────
+      - id: "enerji_alt_secim"
+        type: choice
+        title_tr: "Enerji Türünüzü Seçin"
+        title_en: "Choose Your Energy Type"
+        description_tr: "Hangi yenilenebilir enerji teknolojisine odaklanacaksınız?"
+        description_en: "Which renewable energy technology will you focus on?"
+        choices:
+          - id: "gunes"
+            label_tr: "Güneş Enerjisi"
+            label_en: "Solar Energy"
+            emoji: "☀️"
+            next_node: "gunes_kolu"
+            xp_bonus: 0
+
+          - id: "ruzgar"
+            label_tr: "Rüzgar Enerjisi"
+            label_en: "Wind Energy"
+            emoji: "💨"
+            next_node: "ruzgar_kolu"
+            xp_bonus: 0
+
+      # ─── Görev kolları ─────────────────────
+      - id: "su_kalite_kolu"
+        type: task_set
+        title_tr: "Su Kalitesi Kolu Açıldı! 💧🔬"
+        title_en: "Water Quality Path Unlocked! 💧🔬"
+        description_tr: >
+          Burdur ve Eğirdir göllerinin su kalitesini
+          izlemeye odaklanıyorsunuz.
+        description_en: >
+          You will focus on monitoring water quality
+          in Lakes Burdur and Eğirdir.
+        task_set: "su_kalitesi"
+        xp_multiplier: 1.3   # Su kalitesi uzmanlığı bonus
+        choices: []
+
+      - id: "su_tasarruf_kolu"
+        type: task_set
+        title_tr: "Su Tasarrufu Kolu Açıldı! 💧💦"
+        title_en: "Water Conservation Path Unlocked! 💧💦"
+        description_tr: "Bölgedeki su tüketimini azaltacak çözümler geliştiriyorsunuz."
+        description_en: "You will develop solutions to reduce water consumption in the region."
+        task_set: "su_tasarrufu"
+        xp_multiplier: 1.2
+        choices: []
+
+      - id: "gunes_kolu"
+        type: task_set
+        title_tr: "Güneş Enerjisi Kolu Açıldı! ☀️"
+        title_en: "Solar Energy Path Unlocked! ☀️"
+        description_tr: "Göller Yöresi köyleri için güneş enerjisi çözümleri tasarlıyorsunuz."
+        description_en: "You will design solar energy solutions for Lakes Region villages."
+        task_set: "enerji"
+        xp_multiplier: 1.25
+        choices: []
+
+      - id: "ruzgar_kolu"
+        type: task_set
+        title_tr: "Rüzgar Enerjisi Kolu Açıldı! 💨"
+        title_en: "Wind Energy Path Unlocked! 💨"
+        description_tr: "Bölgenin rüzgar potansiyelini değerlendiriyorsunuz."
+        description_en: "You will evaluate the wind energy potential of the region."
+        task_set: "enerji"
+        xp_multiplier: 1.25
+        choices: []
+
+      - id: "tarim_kolu"
+        type: task_set
+        title_tr: "Sürdürülebilir Tarım Kolu Açıldı! 🌾"
+        title_en: "Sustainable Agriculture Path Unlocked! 🌾"
+        description_tr: "Göller Yöresi'nde iklime dayanıklı tarım çözümleri geliştiriyorsunuz."
+        description_en: "You will develop climate-resilient agricultural solutions."
+        task_set: "tarim"
+        xp_multiplier: 1.2
+        choices: []

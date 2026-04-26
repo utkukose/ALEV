@@ -1,0 +1,436 @@
+{% extends "shared/admin_base.html" %}
+{% block title %}{{ event.name }} — {{ t.teams.title }}{% endblock %}
+{% block tbar_title %}{{ t.teams.title }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="/admin" class="bc-link">{{ t.admin.events }}</a>
+<span class="bc-sep">›</span>
+<a href="/admin/events/{{ event.id }}" class="bc-link">{{ event.name }}</a>
+<span class="bc-sep">›</span>
+<span class="bc-current">{{ t.teams.title }}</span>
+{% endblock %}
+
+{% block help_content %}
+<div class="help-section">
+  <div class="help-section-title">◑ {{ t.help.team_join }}</div>
+  <div class="help-text" style="white-space:pre-line">{{ t.help.team_join_desc }}</div>
+</div>
+<div class="help-tip">{{ t.help.team_tip }}</div>
+{% endblock %}
+
+{% block sidebar %}
+<div class="sbsec">{{ event.name[:18] }}{% if event.name|length>18 %}…{% endif %}</div>
+<a class="sblink" href="/admin/events/{{ event.id }}"><span class="sbico">←</span>{{ t.admin.events }}</a>
+<div class="sbsec">{{ t.common.actions }}</div>
+<button type="button" class="sblink on" onclick="showSec('teams',this)"><span class="sbico">◑</span>{{ t.event_detail.teams }}</button>
+<button type="button" class="sblink" onclick="showSec('members',this)"><span class="sbico">◎</span>{{ t.teams.all_members }}</button>
+<button type="button" class="sblink" onclick="showSec('log',this)"><span class="sbico">📋</span>{% if lang=='tr' %}Aksiyon Logu{% else %}Action Log{% endif %}</button>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.team-big{background:var(--bg2);border:1.5px solid var(--b1);border-radius:14px;overflow:hidden;margin-bottom:1rem;animation:fadeUp .3s ease both}
+.team-big-head{background:var(--bg3);padding:1rem 1.25rem;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.team-big-body{padding:1.1rem 1.25rem}
+.member-row{display:flex;align-items:center;gap:.65rem;padding:.45rem 0;border-bottom:1px solid var(--b1)}
+.member-row:last-child{border-bottom:none}
+.mavatar{width:28px;height:28px;border-radius:50%;background:var(--acl);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--ac);flex-shrink:0}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ TAKIMLAR ═══ -->
+<div id="sec-teams" class="sec on">
+  <div class="fxc jb mb3" style="flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:800;color:var(--wh)">{{ t.teams.title }}</h1>
+      <div style="font-size:.8rem;font-family:'DM Mono',monospace;color:var(--mu)">
+        {{ event.name }} · {{ teams|length }} {{ t.teams.members_count }}
+      </div>
+    </div>
+    <button type="button" class="btn bp bsm" onclick="openModal('team-modal')">+ {{ t.teams.add }}</button>
+  </div>
+
+  <div class="sec-desc"><div class="sec-desc-icon">◑</div><div class="sec-desc-text"><strong>{{ t.help.team_join }}:</strong> {{ t.help.team_join_desc }}</div></div>
+
+  {% for tm in teams %}
+  <div class="team-big" id="team-{{ tm.id }}">
+    <div class="team-big-head">
+      <div class="fxc gapm">
+        <span style="font-size:1.3rem">{{ tm.role_emoji or '⚔' }}</span>
+        <div>
+          <div style="font-weight:800;color:var(--wh);font-size:1rem">{{ tm.name }}</div>
+          <div style="font-size:.74rem;font-family:'DM Mono',monospace;color:var(--mu)">
+            {{ tm.role_name or '—' }} · {{ tm.member_count }} {{ t.teams.members_count }}
+          </div>
+        </div>
+      </div>
+      <div class="fxc gap">
+        
+        <span style="font-family:'DM Mono',monospace;font-size:.88rem;font-weight:700;color:var(--ac)">{{ "{:,}".format(tm.xp) }} BP</span>
+        <button type="button" class="btn bg_ bxs tip" data-tip="{{ t.teams.show_qr }}" onclick="showQR({{ tm.id }})">QR</button>
+        <button type="button" class="btn bg_ bxs tip" data-tip="{% if lang=='tr' %}BP Düzenle{% else %}Edit BP{% endif %}" onclick="openBPModal({{ tm.id }},'{{ tm.name }}',{{ tm.xp }})">⭐ BP</button>
+        <button type="button" class="btn bg_ bxs tip" data-tip="Telegram Grup ID" onclick="openTGModal({{ tm.id }},'{{ tm.name }}',{{ tm.telegram_group_id or 0 }})">📱 TG</button>
+        <button type="button" class="btn bg_ bxs tip" data-tip="{{ t.teams.regen_code }}" onclick="regenCode({{ tm.id }})">↻</button>
+        <button type="button" class="btn ber_ bxs tip" data-tip="{{ t.common.delete }}" onclick="deleteTeam({{ tm.id }})">✕</button>
+      </div>
+    </div>
+    <div class="team-big-body">
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div class="ctitle">{{ t.event_detail.teams }}</div>
+          <div id="members-{{ tm.id }}">
+            <button type="button" class="btn bg_ bxs" onclick="loadMembers({{ tm.id }})">{{ t.teams.show_members }}</button>
+          </div>
+          <div style="margin-top:.65rem">
+            <button type="button" class="btn bin_ bxs" onclick="openMemberModal({{ tm.id }})">+ {{ t.teams.add_member }}</button>
+          </div>
+        </div>
+        <div>
+          <div class="ctitle">{{ t.teams.invite_code }}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:1.3rem;font-weight:800;color:var(--ac);letter-spacing:.15em;background:var(--bg4);padding:.4rem .75rem;border-radius:8px;margin-bottom:.35rem">
+            {{ tm.invite_code }}
+          </div>
+          <div style="font-size:.72rem;color:var(--mu);font-family:'DM Mono',monospace">{{ t.teams.code_hint }}{{ tm.invite_code }}</div>
+          {% if tm.telegram_group_name %}
+          <div style="margin-top:.4rem;font-size:.78rem;color:var(--di)">📱 {{ tm.telegram_group_name }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:4rem;color:var(--mu)">
+    <div style="font-size:2.5rem;margin-bottom:1rem">◑</div>
+    <div style="font-size:.95rem;font-weight:600;color:var(--so);margin-bottom:1rem">{{ t.teams.no_teams }}</div>
+    <button type="button" class="btn bp bsm" onclick="openModal('team-modal')">+ {{ t.teams.add }}</button>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ═══ ÜYE LİSTESİ ═══ -->
+<div id="sec-members" class="sec">
+  <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh);margin-bottom:1.5rem">{{ t.teams.all_members }}</h2>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead><tr>
+        <th>{{ t.common.name }}</th>
+        <th>Telegram ID</th>
+        <th>{{ t.event_detail.teams }}</th>
+        <th>{{ t.teams.member_role }}</th>
+        <th>{{ t.teams.joined }}</th>
+      </tr></thead>
+      <tbody id="all-members-body">
+        <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--mu)">
+          <button type="button" class="btn bg_ bsm" onclick="loadAllMembers()">{{ t.teams.load_members }}</button>
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ AKSİYON LOGU ═══ -->
+<div id="sec-log" class="sec">
+  <div class="fxc jb mb3" style="flex-wrap:wrap;gap:.75rem">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{% if lang=='tr' %}Aksiyon Logu{% else %}Action Log{% endif %}</h2>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <select class="fs" id="log-filter-team" style="font-size:.8rem;padding:.3rem .6rem" onchange="loadLog()">
+        <option value="">{% if lang=='tr' %}Tüm takımlar{% else %}All teams{% endif %}</option>
+        {% for tm in teams %}<option value="{{ tm.id }}">{{ tm.name }}</option>{% endfor %}
+      </select>
+      <button type="button" class="btn bg_ bsm" onclick="loadLog()">↻</button>
+    </div>
+  </div>
+  <div id="log-table" style="background:var(--bg2);border:1px solid var(--b1);border-radius:12px;overflow:hidden">
+    <div style="text-align:center;padding:2rem;color:var(--mu);font-size:.85rem">
+      <button type="button" class="btn bg_ bsm" onclick="loadLog()">{% if lang=='tr' %}Logu Yükle{% else %}Load Log{% endif %}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modaller -->
+<div class="mbg" id="team-modal">
+<div class="modal">
+  <div class="mtitle">◑ {{ t.teams.add }}</div>
+  <div class="fg"><label class="fl">{{ t.teams.team_name }}</label><input class="fi" id="t-name"></div>
+  <div class="fg">
+    <label class="fl">{{ t.teams.role }}</label>
+    <select class="fs" id="t-role">
+      <option value="">—</option>
+      {% for r in roles %}<option value="{{ r.id }}">{{ r.emoji }} {{ r.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="frow c2">
+    <div class="fg">
+      <label class="fl">{{ t.teams.tg_group_id }}</label>
+      <input class="fi" id="t-tgid" placeholder="-1001234567890">
+      <div class="fh">{{ t.teams.tg_hint }}</div>
+    </div>
+    <div class="fg"><label class="fl">{{ t.teams.tg_group_name }}</label><input class="fi" id="t-tgname"></div>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('team-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="createTeam()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<div class="mbg" id="xp-modal">
+<div class="modal" style="max-width:440px">
+  <div class="mtitle" id="xp-mtitle">⭐ {% if lang=='tr' %}BP Düzenle{% else %}Edit BP{% endif %}</div>
+  <input type="hidden" id="xp-team-id">
+  <div style="background:var(--bg3);border-radius:8px;padding:.65rem .85rem;margin-bottom:1rem;font-size:.82rem;color:var(--mu)">
+    {% if lang=='tr' %}Mevcut BP:{% else %}Current BP:{% endif %}
+    <span id="xp-current" style="font-family:'DM Mono',monospace;font-weight:700;color:var(--ac)">0</span>
+  </div>
+  <div class="fg">
+    <label class="fl">{% if lang=='tr' %}BP Değişimi{% else %}BP Change{% endif %}</label>
+    <input class="fi" type="number" id="xp-amount" value="100" placeholder="{% if lang=='tr' %}Eklemek için pozitif, çıkarmak için negatif{% else %}Positive to add, negative to subtract{% endif %}">
+    <div class="fh">{% if lang=='tr' %}Örn: +500 ekler, -200 çıkarır{% else %}e.g. +500 adds, -200 subtracts{% endif %}</div>
+  </div>
+  <div class="fg">
+    <label class="fl">{% if lang=='tr' %}Sebep (opsiyonel){% else %}Reason (optional){% endif %}</label>
+    <input class="fi" id="xp-reason" placeholder="{% if lang=='tr' %}Jüri bonusu, admin düzeltmesi vb.{% else %}Jury bonus, admin correction etc.{% endif %}">
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('xp-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="addXP()">{% if lang=='tr' %}Uygula{% else %}Apply{% endif %}</button>
+  </div>
+</div>
+</div>
+
+<div class="mbg" id="tg-modal">
+<div class="modal" style="max-width:420px">
+  <div class="mtitle" id="tg-mtitle">📱 Telegram Grup ID</div>
+  <input type="hidden" id="tg-team-id">
+  <div style="background:var(--bg3);border-radius:8px;padding:.65rem .85rem;margin-bottom:1rem;font-size:.82rem;color:var(--mu)">
+    {% if lang=='tr' %}Mevcut ID:{% else %}Current ID:{% endif %}
+    <span id="tg-current" style="font-family:'DM Mono',monospace;font-weight:700;color:var(--ac)">—</span>
+  </div>
+  <div class="fg">
+    <label class="fl">Telegram Grup ID</label>
+    <input class="fi" id="tg-group-id" placeholder="-1001234567890" style="font-family:'DM Mono',monospace">
+    <div class="fh">{% if lang=='tr' %}Grup ID'si -100 ile başlar. @userinfobot ile öğrenebilirsiniz.{% else %}Group ID starts with -100. Use @userinfobot to find it.{% endif %}</div>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('tg-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveTGId()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<div class="mbg" id="qr-modal">
+<div class="modal" style="max-width:320px;text-align:center">
+  <div class="mtitle">{{ t.teams.qr_title }}</div>
+  <div id="qr-content" style="padding:1rem 0"></div>
+  <div id="qr-url" style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--mu);word-break:break-all;margin-bottom:1rem"></div>
+  <div class="mfoot" style="justify-content:center">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('qr-modal')">{{ t.common.close }}</button>
+  </div>
+</div>
+</div>
+
+<div class="mbg" id="member-modal">
+<div class="modal" style="max-width:400px">
+  <div class="mtitle">{{ t.teams.add_member }}</div>
+  <input type="hidden" id="m-team-id">
+  <div class="fg"><label class="fl">{{ t.teams.member_tgid }}</label><input class="fi" id="m-tgid" type="number"></div>
+  <div class="fg"><label class="fl">{{ t.teams.member_name }}</label><input class="fi" id="m-name"></div>
+  <div class="fg"><label class="fl">{{ t.teams.member_username }}</label><input class="fi" id="m-username" placeholder="@username"></div>
+  <div class="fg">
+    <label class="fl">{{ t.teams.member_role }}</label>
+    <select class="fs" id="m-role">
+      <option value="member">{{ t.teams.member_member }}</option>
+      <option value="leader">{{ t.teams.member_leader }}</option>
+    </select>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('member-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="addMember()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var EID={{ event.id }};
+var LNG=document.documentElement.getAttribute('lang')||'tr';
+
+async function loadMembers(tid){
+  var el=document.getElementById('members-'+tid);
+  var members=await apiFetch('GET','/api/teams/'+tid+'/members');
+  if(!Array.isArray(members)||!members.length){
+    el.innerHTML='<div style="font-size:.8rem;color:var(--mu)">{{ t.teams.no_teams }}</div>';return;
+  }
+  el.innerHTML=members.map(function(m){
+    return '<div class="member-row">'+
+      '<div class="mavatar">'+(m.display_name||m.username||'?').charAt(0).toUpperCase()+'</div>'+
+      '<div style="flex:1"><div style="font-size:.85rem;font-weight:600;color:var(--wh)">'+(m.display_name||m.username||'ID:'+m.telegram_id)+'</div>'+
+      '<div style="font-size:.7rem;font-family:\'DM Mono\',monospace;color:var(--mu)">'+m.telegram_id+'</div></div>'+
+      '<span class="bdg '+(m.role==='leader'?'bac':'bmu')+'">'+m.role+'</span>'+
+      '<button type="button" class="btn ber_ bxs" onclick="removeMember('+tid+','+m.telegram_id+')">✕</button>'+
+    '</div>';
+  }).join('');
+}
+
+async function loadAllMembers(){
+  var tbody=document.getElementById('all-members-body');
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:1rem;color:var(--mu)"><div class="spin">⟳</div></td></tr>';
+  var teams=await apiFetch('GET','/api/teams/event/'+EID);
+  var rows=[];
+  for(var tm of (teams||[])){
+    var members=await apiFetch('GET','/api/teams/'+tm.id+'/members');
+    for(var m of (members||[])){
+      rows.push('<tr><td style="font-weight:600;color:var(--wh)">'+(m.display_name||m.username||'?')+'</td>'+
+        '<td style="font-family:\'DM Mono\',monospace;font-size:.8rem">'+m.telegram_id+'</td>'+
+        '<td>'+tm.name+'</td>'+
+        '<td><span class="bdg '+(m.role==='leader'?'bac':'bmu')+'">'+m.role+'</span></td>'+
+        '<td style="font-size:.78rem;color:var(--mu)">'+(m.joined_at||'').slice(0,10)+'</td></tr>');
+    }
+  }
+  tbody.innerHTML=rows.length?rows.join(''):'<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--mu)">{{ t.common.no_data }}</td></tr>';
+}
+
+async function createTeam(){
+  var name=document.getElementById('t-name').value.trim();
+  if(!name){toast(LNG==='tr'?'Ad gerekli':'Name required','e');return}
+  var r=await apiFetch('POST','/api/teams/event/'+EID,{
+    name:name,role_id:document.getElementById('t-role').value||null,
+    telegram_group_id:document.getElementById('t-tgid').value?parseInt(document.getElementById('t-tgid').value):null,
+    telegram_group_name:document.getElementById('t-tgname').value});
+  if(r&&r.ok){toast('✓ Code: '+(r.team&&r.team.invite_code),'s');closeModal('team-modal');setTimeout(function(){location.reload()},900)}
+  else toast((r&&r.error)||'Hata','e');
+}
+
+async function deleteTeam(id){
+  if(!confirm('{{ t.teams.delete_confirm }}'))return;
+  var r=await apiFetch('DELETE','/api/teams/'+id);
+  if(r&&r.ok){document.getElementById('team-'+id).remove();toast('✓','s')}
+}
+
+async function regenCode(id){
+  var r=await apiFetch('POST','/api/teams/'+id+'/regen-code');
+  if(r&&r.ok){toast('✓ '+r.invite_code,'s');setTimeout(function(){location.reload()},1000)}
+}
+
+async function showQR(id){
+  document.getElementById('qr-content').innerHTML='<div class="spin" style="font-size:2rem">⟳</div>';
+  openModal('qr-modal');
+  var r=await apiFetch('GET','/api/teams/'+id+'/qr');
+  if(r&&r.ok){
+    document.getElementById('qr-content').innerHTML='<img src="'+r.qr_data+'" style="width:150px;height:150px;border-radius:8px">';
+    document.getElementById('qr-url').textContent=r.url;
+  }
+}
+
+function openXPModal(id,name){openBPModal(id,name,0);}
+function openBPModal(id,name,currentBp){
+  document.getElementById('xp-team-id').value=id;
+  document.getElementById('xp-mtitle').textContent='⭐ BP — '+name;
+  var cur=document.getElementById('xp-current');if(cur)cur.textContent=(currentBp||0).toLocaleString();
+  document.getElementById('xp-amount').value=100;
+  var ra=document.getElementById('xp-reason');if(ra)ra.value='';
+  openModal('xp-modal');
+}
+async function addXP(){
+  var id=document.getElementById('xp-team-id').value;
+  var xp=parseInt(document.getElementById('xp-amount').value)||0;
+  if(!xp){toast(LNG=='tr'?'Miktar girin':'Enter amount','e');return;}
+  var reason=document.getElementById('xp-reason')?document.getElementById('xp-reason').value:'';
+  var r=await apiFetch('POST','/api/teams/'+id+'/xp',{xp:xp,reason:reason});
+  if(r&&r.ok){toast((xp>0?'+':'')+xp+' BP','s');closeModal('xp-modal');setTimeout(function(){location.reload()},600)}
+  else toast((r&&r.error)||'Hata','e');
+}
+
+function openMemberModal(tid){
+  document.getElementById('m-team-id').value=tid;
+  ['m-tgid','m-name','m-username'].forEach(function(id){document.getElementById(id).value=''});
+  document.getElementById('m-role').value='member';
+  openModal('member-modal');
+}
+async function addMember(){
+  var tid=document.getElementById('m-team-id').value;
+  var tgid=document.getElementById('m-tgid').value;
+  if(!tgid)return;
+  var r=await apiFetch('POST','/api/teams/'+tid+'/members',{
+    telegram_id:parseInt(tgid),
+    display_name:document.getElementById('m-name').value,
+    username:document.getElementById('m-username').value.replace('@',''),
+    role:document.getElementById('m-role').value});
+  if(r&&r.ok){toast('✓','s');closeModal('member-modal');loadMembers(parseInt(tid))}
+}
+async function removeMember(tid,tgid){
+  if(!confirm('{{ t.teams.remove }}?'))return;
+  var r=await apiFetch('DELETE','/api/teams/'+tid+'/members/'+tgid);
+  if(r&&r.ok){loadMembers(tid);toast('✓','s')}
+}
+async function loadLog(){
+  var tid=document.getElementById('log-filter-team')?document.getElementById('log-filter-team').value:'';
+  var box=document.getElementById('log-table');
+  if(!box) return;
+  box.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--mu);font-size:.82rem">...</div>';
+  try{
+    var url='/api/teams/log?event_id='+EID+(tid?'&team_id='+tid:'');
+    var rows=await apiFetch('GET',url);
+    if(!rows||!rows.length){
+      box.innerHTML='<div style="text-align:center;padding:2rem;color:var(--mu);font-size:.85rem">'+(LNG=='tr'?'Log kaydı yok':'No log entries')+'</div>';
+      return;
+    }
+    var STATUS_COLOR={approved:'var(--ok)',rejected:'var(--er)',pending:'var(--ac)'};
+    var html2='<table style="width:100%"><thead><tr>'+
+      '<th>'+( LNG=='tr'?'Zaman':'Time')+'</th>'+
+      '<th>'+(LNG=='tr'?'Takım':'Team')+'</th>'+
+      '<th>'+(LNG=='tr'?'Görev':'Task')+'</th>'+
+      '<th>'+(LNG=='tr'?'Kullanıcı':'User')+'</th>'+
+      '<th>'+(LNG=='tr'?'Durum':'Status')+'</th>'+
+      '<th>BP</th>'+
+      '<th></th>'+
+      '</tr></thead><tbody>';
+    rows.forEach(function(r){
+      var col=STATUS_COLOR[r.status]||'var(--mu)';
+      var dt=r.submitted_at?new Date(r.submitted_at).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+      html2+='<tr id="log-row-'+r.id+'">'+
+        '<td style="font-size:.75rem;font-family:monospace;color:var(--mu)">'+dt+'</td>'+
+        '<td style="font-weight:600;color:var(--wh)">'+r.team_name+'</td>'+
+        '<td style="font-size:.82rem;color:var(--so)">'+r.task_title+'</td>'+
+        '<td style="font-size:.78rem;font-family:monospace;color:var(--mu)">'+r.submitted_by+'</td>'+
+        '<td><span style="font-size:.72rem;font-weight:700;color:'+col+'">'+r.status+'</span></td>'+
+        '<td style="font-family:monospace;font-size:.82rem;color:var(--ac)">'+(r.sp_awarded?'+'+r.sp_awarded:r.status==='pending'?'?':'—')+'</td>'+
+        '<td style="white-space:nowrap">'+
+          (r.status==='approved'?
+            '<button class="btn ber_ bxs" onclick="cancelCompletion('+r.id+')" title="'+(LNG=='tr'?'İptal et':'Cancel')+'">✕</button>':'')+ 
+        '</td>'+
+      '</tr>';
+    });
+    html2+='</tbody></table>';
+    box.innerHTML=html2;
+  }catch(e){box.innerHTML='<div style="color:var(--er);padding:1rem;font-size:.85rem">Error: '+e.message+'</div>';}
+}
+
+function openTGModal(tid,name,currentId){
+  document.getElementById('tg-team-id').value=tid;
+  document.getElementById('tg-mtitle').textContent='📱 TG — '+name;
+  var cur=document.getElementById('tg-current');
+  if(cur) cur.textContent=currentId||'—';
+  document.getElementById('tg-group-id').value=currentId&&currentId!=0?currentId:'';
+  openModal('tg-modal');
+}
+async function saveTGId(){
+  var tid=document.getElementById('tg-team-id').value;
+  var gid=document.getElementById('tg-group-id').value.trim();
+  if(!gid){toast(LNG=='tr'?'ID girin':'Enter ID','e');return}
+  var r=await apiFetch('PATCH','/api/teams/'+tid+'/telegram-group',{telegram_group_id:parseInt(gid)});
+  if(r&&r.ok){toast('✓ Kaydedildi','s');closeModal('tg-modal');setTimeout(function(){location.reload()},500);}
+  else toast((r&&r.error)||'Hata','e');
+}
+
+async function cancelCompletion(cid){
+  if(!confirm(LNG=='tr'?'Bu tamamlamayı iptal et ve BP geri al?':'Cancel this completion and reclaim BP?')) return;
+  var r=await apiFetch('POST','/api/teams/completions/'+cid+'/cancel');
+  if(r&&r.ok){toast(LNG=='tr'?'İptal edildi':'Cancelled','s');loadLog();}
+  else toast((r&&r.error)||'Hata','e');
+}
+</script>
+{% endblock %}

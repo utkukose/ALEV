@@ -1,0 +1,239 @@
+{% extends "shared/base.html" %}
+{% block title %}{% if lang=='tr' %}Jüri Paneli{% else %}Jury Panel{% endif %} — {{ brand.name }}{% endblock %}
+
+{% block extra_css %}
+.score-cell{text-align:center;min-width:90px;padding:.5rem .4rem}
+.score-wrap{display:flex;flex-direction:column;align-items:center;gap:.2rem}
+.score-input{width:68px;padding:.4rem .5rem;text-align:center;background:var(--bg3);border:1.5px solid var(--b2);border-radius:7px;color:var(--wh);font-family:'DM Mono',monospace;font-weight:700;font-size:.95rem;transition:border-color .15s}
+.score-input:focus{outline:none;border-color:var(--ac)}
+.score-input.filled{border-color:var(--ok)}
+.jury-id-box{background:var(--bg2);border:1.5px solid var(--b1);border-radius:12px;padding:1rem 1.25rem;max-width:420px;margin:0 auto 1.5rem}
+.jury-id-active{border-color:var(--ok);background:linear-gradient(135deg,rgba(16,185,129,.04),var(--bg2))}
+{% endblock %}
+
+{% block content %}
+<div class="container" style="position:relative;z-index:1">
+  <div style="text-align:center;padding:1.5rem 0 1rem">
+    <h1 style="font-size:1.6rem;font-weight:900;color:var(--wh)">
+      {% if lang=='tr' %}⚖️ Jüri <span style="color:var(--ac)">Paneli</span>{% else %}⚖️ Jury <span style="color:var(--ac)">Panel</span>{% endif %}
+    </h1>
+    <div style="font-size:.8rem;font-family:'DM Mono',monospace;color:var(--mu);margin-top:.3rem">{{ event.name }}</div>
+  </div>
+
+  <!-- Kimlik Girişi -->
+  <div class="jury-id-box" id="id-box">
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:.6rem;font-family:'DM Mono',monospace">
+      {% if lang=='tr' %}Jüri Kimliği{% else %}Jury Identity{% endif %}
+    </div>
+    <div id="id-status" style="display:none;margin-bottom:.65rem;padding:.45rem .7rem;border-radius:7px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);font-size:.82rem;color:var(--ok);font-family:'DM Mono',monospace"></div>
+    <div style="display:flex;gap:.5rem">
+      <input class="fi" id="jury-tg-id" type="number" placeholder="{% if lang=='tr' %}Telegram ID'niz{% else %}Your Telegram ID{% endif %}"
+             style="font-family:'DM Mono',monospace;flex:1">
+      <button class="btn bp bsm" onclick="applyJuryId()">{% if lang=='tr' %}Uygula{% else %}Apply{% endif %}</button>
+    </div>
+    <div style="font-size:.72rem;color:var(--mu);margin-top:.45rem">
+      {% if lang=='tr' %}Telegram ID'nizi öğrenmek için @userinfobot'a /start yazın{% else %}Send /start to @userinfobot to find your Telegram ID{% endif %}
+    </div>
+  </div>
+
+  {% if not attrs %}
+  <div style="text-align:center;padding:2rem;color:var(--mu)">
+    <div style="font-size:1.5rem;margin-bottom:.5rem">⚠️</div>
+    <div>{% if lang=='tr' %}Bu etkinlikte RPG niteliği tanımlanmamış. Admin panelinden nitelik ekleyin.{% else %}No RPG attributes defined for this event. Add attributes from the admin panel.{% endif %}</div>
+  </div>
+  {% elif not teams %}
+  <div style="text-align:center;padding:2rem;color:var(--mu)">
+    {% if lang=='tr' %}Henüz kayıtlı takım yok.{% else %}No registered teams yet.{% endif %}
+  </div>
+  {% else %}
+
+  <!-- Açıklama -->
+  <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.82rem;color:var(--di);line-height:1.65">
+    {% if lang=='tr' %}
+    Her takım için RPG niteliklerini <strong style="color:var(--wh)">0–100</strong> arasında puanlayın.
+    Puanlar mevcut görev BP sistemiyle <strong style="color:var(--ac)">bağımsız</strong> tutulur — takımın toplam değerlendirmesine katkıda bulunur.
+    {% else %}
+    Score each team's RPG attributes from <strong style="color:var(--wh)">0–100</strong>.
+    Jury scores are kept <strong style="color:var(--ac)">separate</strong> from task BP — they contribute to the team's overall evaluation.
+    {% endif %}
+  </div>
+
+  <div style="overflow-x:auto">
+    <table style="min-width:500px;width:100%;background:var(--bg2);border:1px solid var(--b1);border-radius:14px;overflow:hidden;border-collapse:collapse">
+      <thead>
+        <tr style="border-bottom:1px solid var(--b1)">
+          <th style="text-align:left;padding:.65rem 1rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);font-family:'DM Mono',monospace">
+            {% if lang=='tr' %}Takım{% else %}Team{% endif %}
+          </th>
+          {% for a in attrs %}
+          <th class="score-cell" style="font-size:.75rem;color:var(--so)">
+            <div>{{ a.emoji }} {{ a.name_tr if lang=='tr' else a.name_en }}</div>
+            <div style="font-size:.6rem;color:var(--mu)">/100</div>
+          </th>
+          {% endfor %}
+          <th class="score-cell" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);font-family:'DM Mono',monospace">
+            {% if lang=='tr' %}Ort.{% else %}Avg{% endif %}
+          </th>
+          <th style="padding:.5rem .75rem;min-width:80px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tm in teams %}
+        <tr id="row-{{ tm.id }}" style="border-bottom:1px solid var(--b1);transition:background .15s" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background=''">
+          <td style="padding:.65rem 1rem">
+            <div style="font-weight:700;color:var(--wh);font-size:.92rem">{{ tm.role_emoji or '⚔' }} {{ tm.name }}</div>
+            <div style="font-size:.7rem;font-family:'DM Mono',monospace;color:var(--mu);margin-top:.1rem">
+              {{ tm.role_name or '—' }} · {{ tm.xp or 0 }} BP
+            </div>
+          </td>
+          {% for a in attrs %}
+          {% set existing = scores | selectattr('team_id','equalto',tm.id) | selectattr('criterion','equalto',a.key) | list %}
+          <td class="score-cell">
+            <div class="score-wrap">
+              <input class="score-input {% if existing %}filled{% endif %}"
+                     type="number" min="0" max="100" step="1"
+                     id="score-{{ tm.id }}-{{ a.key }}"
+                     value="{{ existing[0].score|int if existing else '' }}"
+                     placeholder="—"
+                     oninput="onScoreChange(this,{{ tm.id }})">
+            </div>
+          </td>
+          {% endfor %}
+          <td class="score-cell">
+            <div id="avg-{{ tm.id }}" style="font-family:'DM Mono',monospace;font-weight:800;font-size:1.05rem;color:var(--ac)">—</div>
+          </td>
+          <td style="padding:.5rem .75rem">
+            <button class="btn bp bxs" onclick="saveScores({{ tm.id }})">
+              {% if lang=='tr' %}Kaydet{% else %}Save{% endif %}
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Toplu kaydet -->
+  <div style="margin-top:1rem;text-align:right">
+    <button class="btn bp bsm" onclick="saveAll()">
+      {% if lang=='tr' %}Tümünü Kaydet{% else %}Save All{% endif %}
+    </button>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var EID={{ event.id }};
+var ATTRS={{ attrs|tojson if attrs else '[]' }};
+var LNG=document.documentElement.getAttribute('lang')||'tr';
+var juryId=0;
+
+/* ── ID yönetimi ── */
+(function(){
+  var stored=localStorage.getItem('alev-jury-id-'+EID);
+  if(stored){juryId=parseInt(stored);applyIdDisplay(juryId,'');}
+})();
+
+function applyJuryId(){
+  var v=parseInt(document.getElementById('jury-tg-id').value||'0');
+  if(!v||v<1000){
+    alert(LNG==='tr'?'Geçerli bir Telegram ID girin (en az 4 hane)':'Enter a valid Telegram ID (at least 4 digits)');
+    return;
+  }
+  juryId=v;
+  localStorage.setItem('alev-jury-id-'+EID,v);
+  applyIdDisplay(v,'');
+  calcAllAvgs();
+}
+
+function applyIdDisplay(id,name){
+  var box=document.getElementById('id-box');
+  var st=document.getElementById('id-status');
+  if(box) box.classList.add('jury-id-active');
+  if(st){
+    st.style.display='block';
+    st.textContent='✓ ID: '+id+(name?' — '+name:'');
+  }
+  var inp=document.getElementById('jury-tg-id');
+  if(inp&&id) inp.value=id;
+}
+
+/* ── Ortalama hesapla ── */
+function calcAvg(tid){
+  var vals=[]; var total=0; var cnt=0;
+  ATTRS.forEach(function(a){
+    var inp=document.getElementById('score-'+tid+'-'+a.key);
+    if(inp&&inp.value!==''){var v=parseFloat(inp.value)||0;vals.push(v);total+=v;cnt++;}
+  });
+  var el=document.getElementById('avg-'+tid);
+  if(el) el.textContent=cnt>0?Math.round(total/cnt):'—';
+  return cnt>0?Math.round(total/cnt):null;
+}
+
+function calcAllAvgs(){
+  document.querySelectorAll('[id^="row-"]').forEach(function(row){
+    var tid=parseInt(row.id.split('-')[1]);
+    calcAvg(tid);
+  });
+}
+
+function onScoreChange(inp,tid){
+  inp.classList.toggle('filled',inp.value!=='');
+  calcAvg(tid);
+}
+
+/* ── Kaydet ── */
+async function saveScores(tid){
+  if(!juryId){
+    alert(LNG==='tr'?'Önce Telegram ID\'nizi girin':'Enter your Telegram ID first');
+    return;
+  }
+  var promises=[];
+  ATTRS.forEach(function(a){
+    var inp=document.getElementById('score-'+tid+'-'+a.key);
+    if(inp&&inp.value!==''){
+      var score=parseFloat(inp.value);
+      if(score>=0&&score<=100){
+        promises.push(
+          fetch('/api/jury/score',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({event_id:EID,team_id:tid,criterion:a.key,score:score,jury_user:juryId})
+          }).then(function(r){return r.json()})
+        );
+      }
+    }
+  });
+  if(!promises.length){
+    toast(LNG==='tr'?'Puan girilmedi':'No scores entered','e');
+    return;
+  }
+  var results=await Promise.all(promises);
+  var ok=results.every(function(r){return r&&r.ok});
+  if(ok){
+    toast(LNG==='tr'?'✓ Puanlar kaydedildi':'✓ Scores saved','s');
+    /* Filled class ekle */
+    ATTRS.forEach(function(a){
+      var inp=document.getElementById('score-'+tid+'-'+a.key);
+      if(inp&&inp.value) inp.classList.add('filled');
+    });
+  } else {
+    toast(LNG==='tr'?'Bazı puanlar kaydedilemedi':'Some scores failed to save','e');
+  }
+}
+
+async function saveAll(){
+  if(!juryId){alert(LNG==='tr'?'Önce Telegram ID\'nizi girin':'Enter your Telegram ID first');return;}
+  var tids=[];
+  document.querySelectorAll('[id^="row-"]').forEach(function(row){
+    tids.push(parseInt(row.id.split('-')[1]));
+  });
+  for(var i=0;i<tids.length;i++) await saveScores(tids[i]);
+  toast(LNG==='tr'?'✓ Tüm puanlar kaydedildi':'✓ All scores saved','s');
+}
+
+calcAllAvgs();
+</script>
+{% endblock %}

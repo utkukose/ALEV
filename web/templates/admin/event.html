@@ -1,0 +1,1392 @@
+{% extends "shared/admin_base.html" %}
+{% block title %}{{ event.name }} — Admin{% endblock %}
+
+{% block breadcrumb %}
+<a href="/admin" class="bc-link">{{ t.admin.events }}</a>
+<span class="bc-sep">›</span>
+<span class="bc-current">{{ event.name }}</span>
+<span class="bdg {% if event.status=='active' %}bac{% else %}bmu{% endif %}" style="margin-left:.25rem;font-size:.58rem">{{ event.status }}</span>
+{% endblock %}
+
+{% block sec_titles %}{"overview":"{{ t.help.overview }}","attributes":"{{ t.event_detail.attributes }}","roles":"{{ t.event_detail.roles }}","scenarios":"{{ t.event_detail.scenarios }}","tasks":"{{ t.event_detail.tasks }}","teams":"{{ t.event_detail.teams }}","approvals":"{{ t.event_detail.approvals }}","announce":"{% if lang=='tr' %}İletişim{% else %}Communication{% endif %}"}{% endblock %}
+
+{% block help_content %}
+{% if lang=='tr' %}
+<div class="help-section">
+  <div class="help-section-title">🚀 Başlangıç Sırası</div>
+  <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text"><b>RPG / Roller</b> — Nitelikler (Güç, Zeka vb.) ve üye rollerini tanımla</div></div>
+  <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text"><b>Senaryo</b> — Oyun akışını ve aşamaları oluştur</div></div>
+  <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text"><b>Görevler</b> — Senaryolara bağlı görevler ekle</div></div>
+  <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text"><b>Takımlar</b> — Takım oluştur, davet koduyla katılımı sağla</div></div>
+  <div class="help-step"><div class="help-step-num">5</div><div class="help-step-text"><b>Aktifleştir</b> — Etkinliği yayına al</div></div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">✨ RPG Nitelikleri</div>
+  <div class="help-text">Güç, Zeka, Çevre gibi özellikler tanımla. Görev ödüllerinde bu key'leri kullan: <code>{"guc": 2, "zeka": 1}</code></div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">⚔️ Roller</div>
+  <div class="help-text">Her üye katılırken bir rol seçer. Rol, başlangıç niteliklerini ve bonus çarpanlarını belirler.</div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">🗺️ Senaryo &amp; Görevler</div>
+  <div class="help-text">Senaryo, oyun akışını tanımlar. Görevler senaryolara bağlanır. Takımlar Telegram'dan <code>/tasks</code> yazarak görür, <code>/submit ID link</code> ile tamamlar.</div>
+  <div class="help-tip">Senaryo aktifleşince Telegram gruplarına otomatik bildirim gider.</div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">👥 Takımlar &amp; Onaylar</div>
+  <div class="help-text">Takımlar web veya Telegram'dan <code>/join KOD</code> yazarak katılır. Üye görev gönderince Onaylar sekmesine düşer, onaylayınca BP otomatik eklenir.</div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">📢 Duyuru</div>
+  <div class="help-text">Tüm gruplara veya seçili takımlara Telegram üzerinden mesaj gönder. Bilgi, uyarı veya başarı türünde emoji ile iletilir.</div>
+</div>
+<div class="help-tip">Bot eklenince tüm aksiyonlar Telegram gruplarına yansır.</div>
+{% else %}
+<div class="help-section">
+  <div class="help-section-title">🚀 Getting Started</div>
+  <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text"><b>RPG / Roles</b> — Define attributes (Strength, Intelligence etc.) and member roles</div></div>
+  <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text"><b>Scenario</b> — Create the game flow and stages</div></div>
+  <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text"><b>Tasks</b> — Add tasks linked to scenarios</div></div>
+  <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text"><b>Teams</b> — Create teams, let members join with invite code</div></div>
+  <div class="help-step"><div class="help-step-num">5</div><div class="help-step-text"><b>Activate</b> — Publish the event</div></div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">✨ RPG Attributes</div>
+  <div class="help-text">Define traits like Strength, Intelligence, Eco. Use their keys in task rewards: <code>{"strength": 2, "intel": 1}</code></div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">⚔️ Roles</div>
+  <div class="help-text">Each member picks a role on joining. The role sets starting attributes and bonus multipliers.</div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">🗺️ Scenario &amp; Tasks</div>
+  <div class="help-text">A scenario defines the game flow. Tasks are linked to scenarios. Members use <code>/tasks</code> to list them and <code>/submit ID link</code> to complete them.</div>
+  <div class="help-tip">When a scenario activates, Telegram groups are notified automatically.</div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">👥 Teams &amp; Approvals</div>
+  <div class="help-text">Teams join via web or Telegram with <code>/join CODE</code>. When a member submits a task it appears in Approvals — approve it to add SP automatically.</div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">📢 Announcement</div>
+  <div class="help-text">Send Telegram messages to all groups or selected teams. Delivered with emoji based on type: info, warning or success.</div>
+</div>
+<div class="help-tip">Once a bot is added, all actions are relayed to Telegram groups.</div>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+<div class="sbsec">{{ event.name[:20] }}{% if event.name|length>20 %}…{% endif %}</div>
+<button type="button" class="sblink on" onclick="gotoSec('overview',this)"><span class="sbico">🏠</span>{{ t.help.overview }}</button>
+<div class="sbsec">{% if lang=='tr' %}RPG / Roller{% else %}RPG / Roles{% endif %}</div>
+<button type="button" class="sblink" onclick="gotoSec('attributes',this)"><span class="sbico">✨</span>{{ t.event_detail.attributes }}</button>
+<button type="button" class="sblink" onclick="gotoSec('roles',this)"><span class="sbico">⚔️</span>{{ t.event_detail.roles }}</button>
+<div class="sbsec">{% if lang=='tr' %}Senaryo / Görev{% else %}Scenario / Task{% endif %}</div>
+<button type="button" class="sblink" onclick="gotoSec('scenarios',this)"><span class="sbico">🗺️</span>{{ t.event_detail.scenarios }}</button>
+<button type="button" class="sblink" onclick="gotoSec('tasks',this)"><span class="sbico">📋</span>{{ t.event_detail.tasks }}</button>
+<div class="sbsec">{% if lang=='tr' %}Takım / Görev Onay{% else %}Team / Task Approval{% endif %}</div>
+<button type="button" class="sblink" onclick="gotoSec('teams',this)"><span class="sbico">👥</span>{{ t.event_detail.teams }}</button>
+<button type="button" class="sblink" onclick="gotoSec('approvals',this)"><span class="sbico">✅</span>{{ t.event_detail.approvals }}</button>
+<div class="sbsec">{% if lang=='tr' %}İletişim{% else %}Communication{% endif %}</div>
+<button type="button" class="sblink" onclick="gotoSec('announce',this)"><span class="sbico">📢</span>{% if lang=='tr' %}Duyuru{% else %}Announcement{% endif %}</button>
+<div class="sbsec">{{ t.common.actions }}</div>
+<a class="sblink" href="/admin"><span class="sbico">←</span>{{ t.admin.events }}</a>
+<a class="sblink" href="/leaderboard?event_id={{ event.id }}" target="_blank"><span class="sbico">🏆</span>Leaderboard</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.attr-row{display:flex;align-items:center;gap:.75rem;padding:.8rem;background:var(--bg3);border:1px solid var(--b1);border-radius:10px;margin-bottom:.45rem;animation:fadeUp .3s ease both}
+.role-card{background:var(--bg3);border:1px solid var(--b1);border-left:3px solid var(--ac);border-radius:12px;padding:1rem;animation:fadeUp .3s ease both}
+.sc-card{background:var(--bg3);border:1.5px solid var(--b1);border-radius:12px;padding:1rem;margin-bottom:.65rem;transition:all .2s}
+.sc-card.sc-active{border-color:var(--ac)}
+.ap-card{background:var(--bg3);border:1px solid var(--b1);border-left:3px solid var(--ac);border-radius:10px;padding:1rem;margin-bottom:.6rem;animation:fadeUp .3s ease both}
+.jc-row{display:flex;align-items:center;gap:.75rem;padding:.75rem .85rem;background:var(--bg3);border:1px solid var(--b1);border-radius:9px;margin-bottom:.4rem}
+.task-row-grid{display:grid;grid-template-columns:1fr 90px 70px 80px 80px;align-items:center;padding:.7rem 1rem;border-bottom:1px solid var(--b1);gap:.5rem;transition:background .15s;min-width:500px}
+.task-row-grid:hover{background:var(--bg3)}
+.task-header{display:grid;grid-template-columns:1fr 90px 70px 80px 80px;padding:.5rem 1rem;background:var(--bg3);border-bottom:1px solid var(--b1);gap:.5rem}
+.diff-kolay,.diff-easy{color:var(--ok)}.diff-orta,.diff-medium{color:var(--ac)}.diff-zor,.diff-hard{color:#f97316}.diff-efsane,.diff-legendary{color:var(--er)}
+.team-card{background:var(--bg2);border:1px solid var(--b1);border-radius:12px;overflow:hidden;margin-bottom:.65rem}
+.team-card-head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.1rem;cursor:pointer;transition:background .15s}
+.team-card-head:hover{background:var(--bg3)}
+.team-card-body{display:none;border-top:1px solid var(--b1);padding:.85rem 1.1rem}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ GENEL BAKIŞ ═══ -->
+<div id="sec-overview" class="sec on">
+  <div class="fxc jb mb3" style="flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1 style="font-size:1.5rem;font-weight:900;color:var(--wh)">{{ event.name }}</h1>
+      <div style="font-size:.8rem;font-family:'DM Mono',monospace;color:var(--mu)">{{ event.slug }} · <span class="tacc">{{ event.status }}</span></div>
+    </div>
+    <div class="fxc gap">
+      {% if event.status != 'active' %}
+      <button type="button" class="btn bok_ bsm" onclick="doActivate()">▶ {{ t.common.activate }}</button>
+      {% else %}
+      <button type="button" class="btn ber_ bsm" onclick="doPause()">⏸ {{ t.events.pause }}</button>
+      {% endif %}
+      <button type="button" class="btn bg_ bsm" onclick="openModal('edit-ev-modal')">✎ {{ t.common.edit }}</button>
+    </div>
+  </div>
+
+  {% if event.status == 'draft' %}
+  <div class="infobox" style="margin-bottom:1.5rem">
+    <strong>{{ t.event_detail.start_guide_title }}</strong> — {{ t.event_detail.start_guide }}
+  </div>
+  {% endif %}
+
+  <div class="srow">
+    <div class="card"><div class="ctitle">{{ t.event_detail.attributes }}</div><div class="cval">{{ attrs|length }}</div></div>
+    <div class="card"><div class="ctitle">{{ t.event_detail.roles }}</div><div class="cval">{{ roles|length }}</div></div>
+    <div class="card"><div class="ctitle">{{ t.event_detail.scenarios }}</div><div class="cval">{{ scenarios|length }}</div></div>
+    <div class="card"><div class="ctitle">{{ t.event_detail.tasks }}</div><div class="cval">{{ tasks|length }}</div></div>
+    <div class="card"><div class="ctitle">{{ t.event_detail.teams }}</div><div class="cval">{{ teams|length }}</div></div>
+    <div class="card"><div class="ctitle">{{ t.event_detail.approvals }}</div><div class="cval" style="color:var(--ac)">{{ pending|length }}</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="ctitle mb2">{{ t.event_detail.quick_access }}</div>
+      <div style="display:flex;flex-direction:column;gap:.4rem">
+        <button type="button" onclick="gotoSec('attributes')" class="btn bg_" style="justify-content:flex-start">✦ {{ t.event_detail.edit_attrs }}</button>
+        <button type="button" onclick="gotoSec('roles')" class="btn bg_" style="justify-content:flex-start">⚔ {{ t.event_detail.roles }}</button>
+        <button type="button" onclick="gotoSec('scenarios')" class="btn bg_" style="justify-content:flex-start">◈ {{ t.event_detail.scenarios }}</button>
+        <button type="button" onclick="gotoSec('tasks')" class="btn bg_" style="justify-content:flex-start">◻ {{ t.event_detail.tasks }}</button>
+        <button type="button" onclick="gotoSec('teams')" class="btn bg_" style="justify-content:flex-start">◑ {{ t.event_detail.team_mgmt }}</button>
+      </div>
+    </div>
+    {% if event.description %}
+    <div class="card">
+      <div class="ctitle mb1">{{ t.common.description }}</div>
+      <div style="font-size:.9rem;line-height:1.65;color:var(--so)">{{ event.description }}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ═══ NİTELİKLER ═══ -->
+<div id="sec-attributes" class="sec">
+  <div class="fxc jb mb2">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{{ t.event_detail.attributes }}</h2>
+    <button type="button" class="btn bp bsm" onclick="openModal('attr-modal');clearAttrForm()">+ {{ t.attributes.add }}</button>
+  </div>
+  <div class="infobox info mb3">{{ t.attributes.tip }}</div>
+  <div id="attrs-list">
+    {% for a in attrs %}
+    <div class="attr-row" id="attr-{{ a.id }}">
+      <span style="font-size:1.3rem;width:32px;text-align:center">{{ a.emoji }}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--wh)">{{ a.name }}</div>
+        {% if a.description %}<div style="font-size:.75rem;color:var(--mu)">{{ a.description }}</div>{% endif %}
+      </div>
+      <span style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--mu)">{{ a.min_val }}–{{ a.max_val }} (def:{{ a.default_val }})</span>
+      <button type="button" class="btn bg_ bxs" onclick='editAttr({{ a|tojson }})'>✎</button>
+      <button type="button" class="btn ber_ bxs" onclick="delAttr({{ a.id }})">✕</button>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--mu)">
+      <div style="font-size:2rem;margin-bottom:.75rem">✦</div>
+      <div style="margin-bottom:1rem;color:var(--so)">{{ t.event_detail.no_attrs }}</div>
+      <button type="button" class="btn bp bsm" onclick="openModal('attr-modal');clearAttrForm()">+ {{ t.event_detail.add_first_attr }}</button>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ═══ ROLLER ═══ -->
+<div id="sec-roles" class="sec">
+  <div class="fxc jb mb2">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{{ t.event_detail.roles }}</h2>
+    <button type="button" class="btn bp bsm" onclick="openModal('role-modal');clearRoleForm()">+ {{ t.roles.add }}</button>
+  </div>
+  <div class="infobox info mb3">{{ t.roles.tip }}</div>
+  <div class="g2" id="roles-list">
+    {% for r in roles %}
+    <div class="role-card" id="role-{{ r.id }}">
+      <div class="fxc jb mb2">
+        <div class="fxc gapm">
+          <span style="font-size:1.4rem">{{ r.emoji }}</span>
+          <div>
+            <div style="font-weight:700;color:var(--wh)">{{ r.name }}</div>
+            <div style="font-size:.72rem;font-family:'DM Mono',monospace;color:var(--mu)">{{ r.key }}</div>
+          </div>
+        </div>
+        <div class="fxc gap">
+          <button type="button" class="btn bg_ bxs" onclick='editRole({{ r|tojson }})'>✎</button>
+          <button type="button" class="btn ber_ bxs" onclick="delRole({{ r.id }})">✕</button>
+        </div>
+      </div>
+      {% if r.description %}<div style="font-size:.82rem;color:var(--di);margin-bottom:.5rem">{{ r.description }}</div>{% endif %}
+      <div class="fxc gap fw">
+      </div>
+    </div>
+    {% else %}
+    <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--mu)">
+      <div style="font-size:2rem;margin-bottom:.75rem">⚔</div>
+      <div style="margin-bottom:1rem;color:var(--so)">{{ t.event_detail.no_roles }}</div>
+      <button type="button" class="btn bp bsm" onclick="openModal('role-modal');clearRoleForm()">+ {{ t.roles.add }}</button>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ═══ SENARYOLAR ═══ -->
+<div id="sec-scenarios" class="sec">
+  <div class="fxc jb mb2">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{{ t.event_detail.scenarios }}</h2>
+    <button type="button" class="btn bp bsm" onclick="clearScForm();openModal('sc-modal')">+ {{ t.scenarios.add }}</button>
+  </div>
+  <div class="infobox info mb3">
+    {% if lang=='tr' %}Senaryo, bir etkinliğin oyun akışıdır. Her senaryoya <strong>minimum tamamlanması gereken görev sayısı</strong>, <strong>bonus BP</strong> ve <strong>rozet</strong> tanımlayabilirsiniz. Takımlar bu hedefe ulaşınca bonus otomatik verilir ve Telegram'a bildirilir.{% else %}A scenario defines the game flow. Set a <strong>minimum task count</strong>, <strong>bonus BP</strong> and <strong>badge</strong> for each scenario. Teams reaching the goal get automatic rewards and Telegram notification.{% endif %}
+  </div>
+  {% for sc in scenarios %}
+  <div class="sc-card {% if sc.status=='active' %}sc-active{% endif %}" id="sc-{{ sc.id }}">
+    <div class="fxc jb mb2">
+      <div>
+        <div class="fxc gap mb1">
+          <span style="font-weight:700;color:var(--wh)">{{ sc.name }}</span>
+          {% if sc.status=='active' %}<span class="bdg bac">{{ t.scenarios.current }}</span>{% endif %}
+        </div>
+        {% if sc.description %}<div style="font-size:.8rem;color:var(--di)">{{ sc.description }}</div>{% endif %}
+        <div class="fxc gap" style="margin-top:.4rem">
+          <span class="bdg bmu">min: {{ sc.min_tasks_required or 1 }} {{ t.tasks.task_title }}</span>
+          <span class="bdg bok2">+{{ sc.bonus_sp or 500 }} BP</span>
+          {% if sc.bonus_badge %}<img src="/static/badges/{{ sc.bonus_badge }}.svg" alt="{{ sc.bonus_badge }}" style="width:20px;height:20px;vertical-align:middle;border-radius:50%" title="{{ sc.bonus_badge|title }}"> <span class="bdg bac" style="font-size:.6rem">{{ sc.bonus_badge|title }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="fxc gap">
+        {% if sc.status != 'active' %}
+        <button type="button" class="btn bok_ bxs tip" data-tip="{{ t.scenarios.activate }}" onclick="activateSc({{ sc.id }})">▶ {% if lang=='tr' %}Aktifleştir{% else %}Activate{% endif %}</button>
+        {% else %}
+        <button type="button" class="btn bg_ bxs tip" data-tip="{% if lang=='tr' %}Pasifleştir{% else %}Deactivate{% endif %}" onclick="deactivateSc({{ sc.id }})">⏸ {% if lang=='tr' %}Durdur{% else %}Pause{% endif %}</button>
+        {% endif %}
+        <button type="button" class="btn bg_ bxs" onclick='editSc({{ sc|tojson }})'>✎</button>
+        <button type="button" class="btn ber_ bxs" onclick="delSc({{ sc.id }})">✕</button>
+      </div>
+    </div>
+    <!-- Bu senaryoya bağlı görevler -->
+    <div style="background:var(--bg4);border-radius:8px;padding:.65rem .85rem;font-size:.8rem;color:var(--mu)">
+      {% set sc_tasks = tasks|selectattr('scenario_id','equalto',sc.id)|list %}
+      {% if lang=='tr' %}Bağlı görev sayısı: {{ sc_tasks|length }}{% else %}Linked tasks: {{ sc_tasks|length }}{% endif %}
+      {% if sc.status != 'active' %}
+      | <span style="color:var(--ac)">{% if lang=='tr' %}▶ Aktifleştirince görevler görünür{% else %}▶ Activate to show tasks{% endif %}</span>
+      {% endif %}
+      <a href="#" onclick="gotoSec('tasks');return false" style="color:var(--ac);text-decoration:none;margin-left:.5rem">→ {{ t.event_detail.tasks }}</a>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:3rem;color:var(--mu)">
+    <div style="font-size:2rem;margin-bottom:.75rem">◈</div>
+    <div style="margin-bottom:1rem;color:var(--so)">{{ t.event_detail.no_scenarios }}</div>
+    <button type="button" class="btn bp bsm" onclick="clearScForm();openModal('sc-modal')">+ {{ t.scenarios.add }}</button>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ═══ GÖREVLER ═══ -->
+<div id="sec-tasks" class="sec">
+  <div class="fxc jb mb2">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{{ t.event_detail.tasks }}</h2>
+    <button type="button" class="btn bp bsm" onclick="openModal('task-modal');clearTaskForm()">+ {{ t.tasks.add }}</button>
+  </div>
+  <div class="infobox info mb3">{{ t.tasks.tip }}</div>
+  <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:12px;overflow:hidden">
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;min-width:0">
+    <div class="task-header" style="min-width:500px">
+      <span style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--mu);font-weight:700;text-transform:uppercase">{{ t.tasks.task_title }}</span>
+      <span style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--mu);font-weight:700;text-transform:uppercase">{{ t.tasks.difficulty }}</span>
+      <span style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--mu);font-weight:700;text-transform:uppercase">BP</span>
+      <span style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--mu);font-weight:700;text-transform:uppercase;text-align:center">{{ t.tasks.status_col }}</span>
+      <span style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--mu);font-weight:700;text-transform:uppercase;text-align:right">{{ t.common.actions }}</span>
+    </div>
+    {% for tk in tasks %}
+    <div class="task-row-grid" id="task-row-{{ tk.id }}">
+      <div>
+        <div style="font-weight:600;color:var(--wh);font-size:.9rem">{{ tk.title or tk.title_tr }}</div>
+        <div style="font-size:.7rem;font-family:'DM Mono',monospace;color:var(--mu)">{{ tk.task_type }}{% if tk.stage_name %} · {{ tk.stage_name }}{% endif %}</div>
+      </div>
+      <span class="diff-{{ tk.difficulty }}" style="font-size:.82rem">{{ tk.difficulty }}</span>
+      <span style="font-family:'DM Mono',monospace;color:var(--ac);font-weight:700">+{{ tk.sp_reward }}</span>
+      <div style="display:flex;align-items:center;gap:.3rem;justify-content:center">
+        <label class="tgl"><input type="checkbox" {% if tk.active %}checked{% endif %} onchange="toggleTask({{ tk.id }},this.checked)"><span class="tgls"></span></label>
+        <span style="font-size:.6rem;font-family:'DM Mono',monospace;color:var(--mu)">{% if tk.active %}on{% else %}off{% endif %}</span>
+      </div>
+      <div style="display:flex;gap:.3rem;justify-content:flex-end">
+        <button type="button" class="btn bg_ bxs" onclick='editTask({{ tk|tojson }})'>✎</button>
+        <button type="button" class="btn ber_ bxs" onclick="delTask({{ tk.id }})">✕</button>
+      </div>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--mu)">{{ t.event_detail.no_tasks }}</div>
+    {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAKIMLAR ═══ -->
+<div id="sec-teams" class="sec">
+  <div class="fxc jb mb2">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{{ t.event_detail.teams }}</h2>
+    <button type="button" class="btn bp bsm" onclick="openModal('team-modal')">+ {{ t.teams.add }}</button>
+  </div>
+  <div class="infobox info mb3">{{ t.help.team_flow }}</div>
+  {% if not teams %}
+  <div style="text-align:center;padding:3rem;color:var(--mu)">
+    <div style="font-size:2rem;margin-bottom:.75rem">◑</div>
+    <div style="margin-bottom:1rem;color:var(--so)">{{ t.event_detail.no_teams }}</div>
+    <button type="button" class="btn bp bsm" onclick="openModal('team-modal')">+ {{ t.teams.add }}</button>
+  </div>
+  {% else %}
+  {% for tm in teams %}
+  <div class="team-card" id="tc-{{ tm.id }}">
+    <div class="team-card-head" onclick="toggleTeam({{ tm.id }})">
+      <div class="fxc gapm">
+        <span style="font-size:1.2rem">{{ tm.role_emoji or '⚔' }}</span>
+        <div>
+          <div style="font-weight:700;color:var(--wh)">{{ tm.name }}</div>
+          <div style="font-size:.72rem;font-family:'DM Mono',monospace;color:var(--mu)">{{ tm.role_name or '—' }} · {{ tm.member_count }} {{ t.teams.members_count }} · Lv.{{ tm.level }}</div>
+        </div>
+      </div>
+      <div class="fxc gap">
+        <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--ac)">{{ "{:,}".format(tm.xp) }} BP</span>
+        <button type="button" class="btn ber_ bxs" onclick="event.stopPropagation();delTeam({{ tm.id }})">✕</button>
+        <span id="tc-arrow-{{ tm.id }}" style="color:var(--mu)">▼</span>
+      </div>
+    </div>
+    <div class="team-card-body" id="tc-body-{{ tm.id }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div>
+          <div class="ctitle">{{ t.teams.invite_code }}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:800;color:var(--ac);letter-spacing:.15em;background:var(--bg4);padding:.35rem .65rem;border-radius:7px;margin-bottom:.4rem">{{ tm.invite_code }}</div>
+          {% if tm.telegram_group_name %}<div style="font-size:.75rem;color:var(--di);margin-bottom:.5rem">📱 {{ tm.telegram_group_name }}</div>{% endif %}
+          {% if tm.telegram_group_id %}<div style="font-size:.7rem;font-family:'DM Mono',monospace;color:var(--mu)">ID: {{ tm.telegram_group_id }}</div>{% else %}<div style="font-size:.7rem;color:var(--er)">⚠ Telegram Grup ID girilmemiş</div>{% endif %}
+          <div class="fxc gap" style="flex-wrap:wrap;margin-top:.5rem">
+            <button type="button" class="btn bg_ bxs" onclick="openXP({{ tm.id }},'{{ tm.name|replace("'","") }}')">⭐ +BP</button>
+            <button type="button" class="btn bg_ bxs" onclick="openAddMem({{ tm.id }})">+ {{ t.teams.add_member }}</button>
+            <button type="button" class="btn bg_ bxs" onclick="editTeam({{ tm.id }},'{{ tm.name|replace("'","") }}',{{ tm.telegram_group_id or 'null' }},'{{ tm.telegram_group_name or "" }}')">✎ {% if lang=='tr' %}Düzenle{% else %}Edit{% endif %}</button>
+          </div>
+        </div>
+        <div>
+          <div class="ctitle">{{ t.teams.all_members }}</div>
+          <div id="mem-{{ tm.id }}">
+            <button type="button" class="btn bg_ bxs" onclick="loadMem({{ tm.id }})">{{ t.teams.load_members }}</button>
+          </div>
+        </div>
+      </div>
+      {% if tm.badges and tm.badges|length > 0 %}
+      <div class="fxc gap fw" style="margin-top:.65rem">
+        {% for b in tm.badges %}<span class="bdg bac" style="font-size:.62rem">🏅 {{ b }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+
+<!-- ═══ ONAYLAR ═══ -->
+<div id="sec-approvals" class="sec">
+  <div class="fxc jb mb3">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{{ t.event_detail.pending_title }}</h2>
+    <button type="button" class="btn bg_ bsm" onclick="loadApprovals()">↻ {% if lang=='tr' %}Yenile{% else %}Refresh{% endif %}</button>
+  </div>
+  <div id="approvals-dynamic"></div>
+  <div id="approvals-static">
+  {% for p in pending %}
+  <div class="ap-card" id="ap-{{ p.id }}">
+    <div class="fxc jb mb2">
+      <div>
+        <div style="font-weight:700;color:var(--wh)">{{ p.title or p.title_tr }}</div>
+        <div style="font-size:.75rem;font-family:'DM Mono',monospace;color:var(--mu)">{{ p.team_name }} · +{{ p.sp_reward }} BP</div>
+      </div>
+      <span class="bdg bac">{{ t.event_detail.pending_badge }}</span>
+    </div>
+    {% if p.proof_url %}
+    <div style="font-family:'DM Mono',monospace;font-size:.76rem;background:var(--bg4);padding:.42rem .65rem;border-radius:7px;margin-bottom:.65rem;word-break:break-all">
+      <a href="{{ p.proof_url }}" target="_blank" style="color:var(--in)">{{ p.proof_url }}</a>
+    </div>
+    {% endif %}
+    <div class="fxc gap">
+      <button type="button" class="btn bok_ bsm" onclick="reviewTask({{ p.id }},'approved')">{{ t.event_detail.approve }}</button>
+      <button type="button" class="btn ber_ bsm" onclick="reviewTask({{ p.id }},'rejected')">{{ t.event_detail.reject }}</button>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:3rem;color:var(--mu)">
+    <div style="font-size:2rem;margin-bottom:.5rem">✓</div>
+    <div style="color:var(--so)">{{ t.event_detail.no_pending }}</div>
+  </div>
+  {% endfor %}
+</div>
+</div>
+
+
+<!-- ═══ İLETİŞİM / COMMUNICATION ═══ -->
+<div id="sec-announce" class="sec">
+  <div class="fxc jb mb3">
+    <h2 style="font-size:1.2rem;font-weight:800;color:var(--wh)">{% if lang=='tr' %}Duyuru{% else %}Announcement{% endif %}</h2>
+    <button type="button" class="btn bg_ bsm" onclick="loadAnnLog()">📋 {% if lang=='tr' %}Geçmiş{% else %}History{% endif %}</button>
+  </div>
+  <div id="ann-log" style="display:none;margin-bottom:1.25rem;background:var(--bg3);border-radius:10px;padding:.85rem;max-height:320px;overflow-y:auto"></div>
+
+  <div style="max-width:600px;display:flex;flex-direction:column;gap:1rem">
+
+    <!-- Başlık -->
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Başlık{% else %}Title{% endif %}</label>
+      <input class="fi" id="ann-title" placeholder="{% if lang=='tr' %}Duyuru başlığı{% else %}Announcement title{% endif %}">
+    </div>
+
+    <!-- İçerik -->
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}İçerik *{% else %}Message *{% endif %}</label>
+      <textarea class="ft" id="ann-msg" rows="4" placeholder="{% if lang=='tr' %}Mesaj içeriği...{% else %}Message content...{% endif %}"></textarea>
+    </div>
+
+    <!-- Tür -->
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Mesaj Türü{% else %}Message Type{% endif %}</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem">
+        <label style="display:flex;align-items:center;gap:.5rem;padding:.6rem .85rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:9px;cursor:pointer;transition:all .15s" id="ann-type-info-lbl">
+          <input type="radio" name="ann-type" value="info" checked style="accent-color:var(--in)" onchange="highlightAnnType()">
+          <span style="font-size:1.1rem">ℹ️</span>
+          <span style="font-size:.85rem;color:var(--so)">{% if lang=='tr' %}Bilgi{% else %}Info{% endif %}</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:.5rem;padding:.6rem .85rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:9px;cursor:pointer;transition:all .15s" id="ann-type-warning-lbl">
+          <input type="radio" name="ann-type" value="warning" style="accent-color:var(--ac)" onchange="highlightAnnType()">
+          <span style="font-size:1.1rem">⚠️</span>
+          <span style="font-size:.85rem;color:var(--so)">{% if lang=='tr' %}Uyarı{% else %}Warning{% endif %}</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:.5rem;padding:.6rem .85rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:9px;cursor:pointer;transition:all .15s" id="ann-type-success-lbl">
+          <input type="radio" name="ann-type" value="success" style="accent-color:var(--ok)" onchange="highlightAnnType()">
+          <span style="font-size:1.1rem">✅</span>
+          <span style="font-size:.85rem;color:var(--so)">{% if lang=='tr' %}Başarı{% else %}Success{% endif %}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Alıcılar -->
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Alıcılar{% else %}Recipients{% endif %}</label>
+      <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:10px;overflow:hidden">
+        <label style="display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;cursor:pointer;border-bottom:1px solid var(--b1);transition:background .15s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+          <input type="checkbox" id="ann-all" checked style="accent-color:var(--ac);width:15px;height:15px" onchange="toggleAnnAll()">
+          <span style="font-size:.9rem;font-weight:600;color:var(--wh)">{% if lang=='tr' %}Tüm Gruplar{% else %}All Groups{% endif %}</span>
+          <span style="font-size:.75rem;color:var(--mu);margin-left:auto">{{ teams|length }} {% if lang=='tr' %}takım{% else %}team{% endif %}</span>
+        </label>
+        <div id="ann-teams-list" style="max-height:200px;overflow-y:auto">
+          {% for tm in teams %}
+          <label style="display:flex;align-items:center;gap:.75rem;padding:.5rem 1rem 0.5rem 2.5rem;cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+            <input type="checkbox" class="ann-team-cb" value="{{ tm.id }}" checked style="accent-color:var(--ac);width:14px;height:14px" onchange="syncAnnAll()">
+            <span style="font-size:.88rem;color:var(--so)">{{ tm.role_emoji or '◑' }} {{ tm.name }}</span>
+            {% if not tm.telegram_group_id %}<span style="font-size:.68rem;color:var(--er);margin-left:auto">⚠ no TG</span>{% endif %}
+          </label>
+          {% else %}
+          <div style="padding:.75rem 1rem;font-size:.82rem;color:var(--mu)">{% if lang=='tr' %}Henüz takım yok{% else %}No teams yet{% endif %}</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn bp" style="max-width:200px" onclick="sendAnn()">
+      📢 {% if lang=='tr' %}Gönder{% else %}Send{% endif %}
+    </button>
+  </div>
+</div>
+
+<!-- ════ MODALLAR ════ -->
+
+<!-- Etkinlik Düzenle -->
+
+
+<!-- ═══ MODALLER ═══ -->
+<div class="mbg" id="edit-ev-modal">
+<div class="modal" style="max-width:520px">
+  <div class="mtitle">✎ {{ t.common.edit }}</div>
+  <div class="fg"><label class="fl">{{ t.events.event_name }} *</label><input class="fi" id="ee-name" value="{{ event.name }}"></div>
+  <div class="fg"><label class="fl">{{ t.common.description }}</label><textarea class="ft" id="ee-desc" rows="2">{{ event.description or '' }}</textarea></div>
+  <div class="frow c2">
+    <div class="fg"><label class="fl">{{ t.events.max_teams }}</label><input class="fi" type="number" id="ee-maxteams" value="{{ event.max_teams }}"></div>
+    <div class="fg"><label class="fl">{{ t.events.max_members }}</label><input class="fi" type="number" id="ee-maxmembers" value="{{ event.max_members_per_team }}"></div>
+  </div>
+  <div class="fg">
+    <label class="fl">{% if lang=='tr' %}Bot Dili{% else %}Bot Language{% endif %}</label>
+    <select class="fs" id="ee-lang">
+      <option value="tr" {% if event.language=='tr' or not event.language %}selected{% endif %}>Türkçe</option>
+      <option value="en" {% if event.language=='en' %}selected{% endif %}>English</option>
+    </select>
+    <div class="fh">{% if lang=='tr' %}Bot mesajları bu dilde gönderilir{% else %}Bot messages sent in this language{% endif %}</div>
+  </div>
+  <div class="fg">
+    <label class="fl">{% if lang=='tr' %}Kişi Başı Maks. Görev{% else %}Max Tasks per Member{% endif %}</label>
+    <input class="fi" type="number" id="ee-max-tasks" min="0" value="{{ event.max_tasks_per_member or 0 }}">
+    <div class="fh">{% if lang=='tr' %}0 = sınırsız. Meta-gaming önlemi: bir üye etkinlikte en fazla bu kadar görev tamamlayabilir.{% else %}0 = unlimited. Anti meta-gaming: a member can complete at most this many tasks in the event.{% endif %}</div>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('edit-ev-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveEvent()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<!-- Nitelik Modal -->
+<div class="mbg" id="attr-modal">
+<div class="modal">
+  <div class="mtitle" id="attr-mtitle">✦ {{ t.attributes.add }}</div>
+  <input type="hidden" id="attr-id">
+  <div class="frow c2">
+    <input type="hidden" id="attr-key" value="">
+    <div class="fg">
+      <label class="fl">{{ t.attributes.emoji }}</label>
+      <div class="emoji-inp-wrap"><input type="hidden" id="attr-emoji" value="⭐"><div class="emoji-inp" id="attr-emoji-display" onclick="openEP('attr-emoji')">⭐</div></div>
+    </div>
+  </div>
+  <div class="fg"><label class="fl">{{ t.attributes.attr_name }}</label><input class="fi" id="attr-name" placeholder="Güç / Strength"></div>
+  <div class="fg"><label class="fl">{{ t.attributes.attr_desc }}</label><input class="fi" id="attr-desc"></div>
+  <div class="frow c3">
+    <div class="fg"><label class="fl">{{ t.attributes.min }}</label><input class="fi" type="number" id="attr-min" value="0"></div>
+    <div class="fg"><label class="fl">{{ t.attributes.max }}</label><input class="fi" type="number" id="attr-max" value="20"></div>
+    <div class="fg"><label class="fl">{{ t.attributes.default }}</label><input class="fi" type="number" id="attr-default" value="5"></div>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('attr-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveAttr()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<!-- Rol Modal -->
+<div class="mbg" id="role-modal">
+<div class="modal" style="max-width:580px">
+  <div class="mtitle" id="role-mtitle">⚔ {{ t.roles.add }}</div>
+  <input type="hidden" id="role-id">
+  <div class="frow c2">
+    <input type="hidden" id="role-key" value="">
+    <div class="fg">
+      <label class="fl">{{ t.roles.emoji }}</label>
+      <div class="emoji-inp-wrap"><input type="hidden" id="role-emoji" value="⚔"><div class="emoji-inp" id="role-emoji-display" onclick="openEP('role-emoji')">⚔</div></div>
+    </div>
+  </div>
+  <div class="fg"><label class="fl">{{ t.roles.role_name }}</label><input class="fi" id="role-name"></div>
+  <div class="fg"><label class="fl">{{ t.roles.role_desc }}</label><textarea class="ft" id="role-desc" rows="2"></textarea></div>
+  <input type="hidden" id="role-bonus" value="">
+  <input type="hidden" id="role-mult" value="1.0">
+  <div class="fg">
+    <label class="fl">{{ t.roles.base_attrs }}</label>
+    <div id="role-attr-inputs" style="display:flex;flex-direction:column;gap:.4rem">
+      {% for a in attrs %}
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <span style="min-width:28px;font-size:1rem">{{ a.emoji }}</span>
+        <span style="flex:1;font-size:.82rem;color:var(--so)">{{ a.name }}</span>
+        <input type="number" id="role-attr-{{ a.key }}" min="{{ a.min_val }}" max="{{ a.max_val }}" value="{{ a.default_val }}"
+               style="width:70px;padding:.3rem .5rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:7px;color:var(--so);font-family:'DM Mono',monospace;font-size:.85rem;outline:none;text-align:center"
+               data-key="{{ a.key }}" data-default="{{ a.default_val }}">
+      </div>
+      {% else %}
+      <div class="fh" style="color:var(--mu)">{{ t.event_detail.no_attrs }}</div>
+      {% endfor %}
+    </div>
+  </div>
+  <input type="hidden" id="role-max" value="99">
+  <input type="hidden" id="role-unlock" value="1">
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('role-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveRole()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<!-- Senaryo Modal -->
+<div class="mbg" id="sc-modal">
+<div class="modal" style="max-width:560px">
+  <div class="mtitle" id="sc-mtitle">◈ {{ t.scenarios.add }}</div>
+  <input type="hidden" id="sc-id">
+  <div class="fg"><label class="fl">{{ t.scenarios.scenario_name }}</label><input class="fi" id="sc-name"></div>
+  <div class="fg"><label class="fl">{{ t.common.description }}</label><textarea class="ft" id="sc-desc" rows="2"></textarea></div>
+  <div class="divider"></div>
+  <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:.75rem;font-family:'DM Mono',monospace">🏆 {% if lang=='tr' %}Tamamlama Bonusu{% else %}Completion Bonus{% endif %}</div>
+  <div class="frow c3">
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Min. Görev Sayısı{% else %}Min. Tasks{% endif %}</label>
+      <input class="fi" type="number" id="sc-min-tasks" value="2" min="1">
+      <div class="fh">{% if lang=='tr' %}Bu kadar görev onaylanınca bonus tetiklenir{% else %}Bonus triggers when this many tasks approved{% endif %}</div>
+    </div>
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}1. Bonus BP{% else %}1st Bonus BP{% endif %}</label>
+      <input class="fi" type="number" id="sc-first-xp" value="200">
+      <div class="fh">{% if lang=='tr' %}İlk tamamlayan{% else %}First team{% endif %}</div>
+    </div>
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Diğer Bonus BP{% else %}Other Bonus BP{% endif %}</label>
+      <input class="fi" type="number" id="sc-bonus-xp" value="150">
+      <div class="fh">{% if lang=='tr' %}Sonraki takımlar{% else %}Other teams{% endif %}</div>
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">{% if lang=='tr' %}Tamamlama Rozeti{% else %}Completion Badge{% endif %}</label>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <select class="fs" id="sc-badge" onchange="previewBadgeSc(this.value)" style="flex:1">
+        <option value="">— {% if lang=='tr' %}Rozet yok{% else %}No badge{% endif %} —</option>
+        {% for bf in ['gold','silver','bronze','blue','green','purple'] %}
+        <option value="{{ bf }}">{{ bf|title }}</option>
+        {% endfor %}
+      </select>
+      <img id="sc-badge-preview" src="" alt="" style="width:36px;height:36px;display:none;border-radius:50%;object-fit:contain">
+    </div>
+    <div class="fh">{% if lang=='tr' %}static/badges/ klasöründen seçin. Özel rozet için klasöre PNG/SVG ekleyin ve sayfayı yenileyin.{% else %}Select from static/badges/. Add custom PNG/SVG to the folder and reload.{% endif %}</div>
+  </div>
+
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('sc-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveSc()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<!-- Görev Modal -->
+<div class="mbg" id="task-modal">
+<div class="modal" style="max-width:600px">
+  <div class="mtitle" id="task-mtitle">◻ {{ t.tasks.add }}</div>
+  <input type="hidden" id="task-id">
+  <div class="fg"><label class="fl">{{ t.tasks.task_title }}</label><input class="fi" id="task-title"></div>
+  <div class="fg"><label class="fl">{{ t.tasks.task_desc }}</label><textarea class="ft" id="task-desc" rows="2"></textarea></div>
+  <div class="frow c3">
+    <div class="fg">
+      <label class="fl">{{ t.tasks.difficulty }}</label>
+      <select class="fs" id="task-diff">
+        <option value="kolay">{{ t.tasks.diff_easy }}</option>
+        <option value="orta" selected>{{ t.tasks.diff_medium }}</option>
+        <option value="zor">{{ t.tasks.diff_hard }}</option>
+        <option value="efsane">{{ t.tasks.diff_legendary }}</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">{{ t.tasks.sp_reward }}</label><input class="fi" type="number" id="task-xp" value="300"></div>
+  </div>
+  <div class="frow c2">
+    <div class="fg">
+      <label class="fl">{{ t.tasks.proof_type }}</label>
+      <select class="fs" id="task-proof">
+        <option value="link">{{ t.tasks.proof_link }}</option>
+        <option value="file">{{ t.tasks.proof_file }}</option>
+        <option value="code">{{ t.tasks.proof_code }}</option>
+        <option value="photo">{{ t.tasks.proof_photo }}</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Senaryo *{% else %}Scenario *{% endif %}</label>
+      <select class="fs" id="task-scenario">
+        <option value="">— {% if lang=='tr' %}Senaryoya bağlama{% else %}No scenario{% endif %} —</option>
+        {% for sc in scenarios %}
+        <option value="{{ sc.id }}">{{ sc.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">{{ t.tasks.attr_rewards }}</label>
+    <div id="task-attr-inputs" style="display:flex;flex-direction:column;gap:.4rem">
+      {% for a in attrs %}
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <span style="min-width:28px;font-size:1rem">{{ a.emoji }}</span>
+        <div style="flex:1">
+          <div style="font-size:.82rem;color:var(--so)">{{ a.name }}</div>
+          <div style="font-size:.68rem;font-family:'DM Mono',monospace;color:var(--mu)">key: {{ a.key }}</div>
+        </div>
+        <input type="number" id="task-attr-{{ a.key }}" min="0" max="{{ a.max_val }}" value="0"
+               style="width:70px;padding:.3rem .5rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:7px;color:var(--so);font-family:'DM Mono',monospace;font-size:.85rem;outline:none;text-align:center"
+               data-key="{{ a.key }}">
+      </div>
+      {% else %}
+      <div class="fh" style="color:var(--mu)">{{ t.event_detail.no_attrs }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('task-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveTask()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<!-- Takım Modal -->
+<div class="mbg" id="team-modal">
+<div class="modal" style="max-width:460px">
+  <div class="mtitle">◑ {{ t.teams.add }}</div>
+  <div class="fg"><label class="fl">{{ t.teams.team_name }}</label><input class="fi" id="t-name"></div>
+  <div class="frow c2">
+    <div class="fg"><label class="fl">{{ t.teams.tg_group_id }}</label><input class="fi" id="t-tgid" placeholder="-1001234567890"><div class="fh">{{ t.teams.tg_hint }}</div></div>
+    <div class="fg"><label class="fl">{{ t.teams.tg_group_name }}</label><input class="fi" id="t-tgname"></div>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('team-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveTeam()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<!-- Takım Düzenle Modal -->
+<div class="mbg" id="edit-team-modal">
+<div class="modal" style="max-width:460px">
+  <div class="mtitle" id="edit-team-title">✎ {% if lang=='tr' %}Takımı Düzenle{% else %}Edit Team{% endif %}</div>
+  <input type="hidden" id="edit-team-id">
+  <div class="fg">
+    <label class="fl">{{ t.teams.team_name }}</label>
+    <input class="fi" id="edit-team-name">
+  </div>
+  <div class="fg">
+    <label class="fl">{{ t.teams.tg_group_id }}</label>
+    <input class="fi" id="edit-team-tgid" placeholder="-1001234567890" style="font-family:'DM Mono',monospace">
+    <div class="fh">{% if lang=='tr' %}Gruba @userinfobot ekleyip /start yazın — ID'yi söyler{% else %}Add @userinfobot to the group, send /start — it will show the ID{% endif %}</div>
+  </div>
+  <div class="fg">
+    <label class="fl">{{ t.teams.tg_group_name }}</label>
+    <input class="fi" id="edit-team-tgname" placeholder="{% if lang=='tr' %}Grup adı (opsiyonel){% else %}Group name (optional){% endif %}">
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('edit-team-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="saveEditTeam()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<!-- Üye Ekle Modal -->
+<div class="mbg" id="addmem-modal">
+<div class="modal" style="max-width:400px">
+  <div class="mtitle">👥 {{ t.teams.add_member }}</div>
+  <input type="hidden" id="addmem-tid">
+  <div class="fg"><label class="fl">Telegram ID *</label><input class="fi" id="addmem-tgid" type="number"></div>
+  <div class="fg"><label class="fl">{{ t.teams.member_name }}</label><input class="fi" id="addmem-name"></div>
+  <div class="fg"><label class="fl">{{ t.teams.member_username }}</label><input class="fi" id="addmem-username" placeholder="@username"></div>
+  <div class="fg">
+    <label class="fl">{{ t.teams.member_role }}</label>
+    <select class="fs" id="addmem-role"><option value="member">{{ t.teams.member_member }}</option><option value="leader">{{ t.teams.member_leader }}</option></select>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('addmem-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="doAddMem()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+
+<!-- BP Modal -->
+<div class="mbg" id="xp-modal">
+<div class="modal" style="max-width:320px">
+  <div class="mtitle" id="xp-modal-title">⭐ {{ t.teams.add_xp }}</div>
+  <input type="hidden" id="xp-tid">
+  <div class="fg"><label class="fl">{{ t.teams.xp_amount }}</label><input class="fi" type="number" id="xp-amount" value="100" min="1"></div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('xp-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="doXP()">+ BP</button>
+  </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var EID={{ event.id }};
+var LNG=document.documentElement.getAttribute('lang')||'tr';
+
+/* ─── Navigasyon ─── */
+function escapeHtml(s){
+  if(s==null||s===undefined)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function gotoSec(id,btn){
+  var b=btn||document.querySelector('.sblink[onclick*="\''+id+'\'"]');
+  showSec(id,b);
+}
+
+/* ─── Etkinlik ─── */
+async function doActivate(){
+  var r=await apiFetch('POST','/api/events/'+EID+'/activate');
+  if(r&&r.ok){toast(LNG=='tr'?'Aktiflestirildi':'Activated','s');setTimeout(function(){location.reload()},700)}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function doPause(){
+  var ev=await apiFetch('GET','/api/events/'+EID);
+  if(!ev)return;
+  var r=await apiFetch('PUT','/api/events/'+EID,Object.assign({},ev,{status:'paused'}));
+  if(r&&r.ok){toast('Duraklatildi','w');setTimeout(function(){location.reload()},700)}
+}
+async function saveEvent(){
+  var name=document.getElementById('ee-name').value.trim();
+  if(!name){toast('Ad gerekli','e');return}
+  var r=await apiFetch('PUT','/api/events/'+EID,{
+    name:name,description:document.getElementById('ee-desc').value,
+    max_teams:parseInt(document.getElementById('ee-maxteams').value)||20,
+    max_members_per_team:parseInt(document.getElementById('ee-maxmembers').value)||6,
+    max_tasks_per_member:parseInt(document.getElementById('ee-max-tasks')?.value||'0')||0,
+    language:document.getElementById('ee-lang').value,
+    status:'{{ event.status }}'
+  });
+  if(r&&r.ok){toast('Kaydedildi','s');closeModal('edit-ev-modal');setTimeout(function(){location.reload()},700)}
+  else toast((r&&r.error)||'Hata','e');
+}
+
+/* ─── Nitelikler ─── */
+function clearAttrForm(){
+  document.getElementById('attr-id').value='';
+  document.getElementById('attr-key').value='';
+  document.getElementById('attr-name').value='';
+  document.getElementById('attr-desc').value='';
+  document.getElementById('attr-emoji').value='';
+  document.getElementById('attr-emoji-display').textContent='⭐';
+  document.getElementById('attr-min').value=0;
+  document.getElementById('attr-max').value=20;
+  document.getElementById('attr-default').value=5;
+  document.getElementById('attr-mtitle').textContent='✦ '+(LNG=='tr'?'Nitelik Ekle':'Add Attribute');
+}
+function editAttr(a){
+  document.getElementById('attr-id').value=a.id;
+  document.getElementById('attr-key').value=a.key;
+  document.getElementById('attr-name').value=a.name||a.name_tr||'';
+  document.getElementById('attr-desc').value=a.description||a.description_tr||'';
+  document.getElementById('attr-emoji').value=a.emoji||'';
+  document.getElementById('attr-emoji-display').textContent=a.emoji||'⭐';
+  document.getElementById('attr-min').value=a.min_val;
+  document.getElementById('attr-max').value=a.max_val;
+  document.getElementById('attr-default').value=a.default_val;
+  document.getElementById('attr-mtitle').textContent='✦ '+(LNG=='tr'?'Nitelik Duzenle':'Edit Attribute');
+  openModal('attr-modal');
+}
+async function saveAttr(){
+  var name=document.getElementById('attr-name').value.trim();
+  if(!name){toast('Ad gerekli','e');return}
+  var key=document.getElementById('attr-key').value.trim()||
+    name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'').substring(0,20)||('attr_'+Date.now());
+  var d={key:key,emoji:document.getElementById('attr-emoji').value||'⭐',
+    name:name,name_tr:name,name_en:name,
+    description:document.getElementById('attr-desc').value,
+    description_tr:document.getElementById('attr-desc').value,
+    description_en:document.getElementById('attr-desc').value,
+    min_val:parseInt(document.getElementById('attr-min').value)||0,
+    max_val:parseInt(document.getElementById('attr-max').value)||20,
+    default_val:parseInt(document.getElementById('attr-default').value)||5,
+    color:'amber'};
+  var r=await apiFetch('POST','/api/events/'+EID+'/attributes',d);
+  if(r&&r.ok){toast('Nitelik kaydedildi','s');closeModal('attr-modal');setTimeout(function(){reloadSection('attributes')},500)}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function delAttr(id){
+  if(!confirm(LNG=='tr'?'Silinsin mi?':'Delete?'))return;
+  var r=await apiFetch('DELETE','/api/events/'+EID+'/attributes/'+id);
+  if(r&&r.ok){var el=document.getElementById('attr-'+id);if(el)el.remove();toast('Silindi','s')}
+  else toast((r&&r.error)||'Hata','e');
+}
+
+/* ─── Roller ─── */
+function clearRoleForm(){
+  ['role-id','role-key','role-name','role-desc'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('role-emoji').value='';
+  document.getElementById('role-emoji-display').textContent='⚔';
+  document.getElementById('role-mtitle').textContent='⚔ '+(LNG=='tr'?'Rol Ekle':'Add Role');
+  document.querySelectorAll('#role-attr-inputs input[data-key]').forEach(function(inp){
+    inp.value=inp.getAttribute('data-default')||0;
+  });
+}
+function editRole(r){
+  document.getElementById('role-id').value=r.id;
+  document.getElementById('role-key').value=r.key;
+  document.getElementById('role-name').value=r.name||r.name_tr||'';
+  document.getElementById('role-desc').value=r.description||r.description_tr||'';
+  document.getElementById('role-emoji').value=r.emoji||'';
+  document.getElementById('role-emoji-display').textContent=r.emoji||'⚔';
+  document.getElementById('role-mtitle').textContent='⚔ '+(LNG=='tr'?'Rol Duzenle':'Edit Role');
+  var ba=r.base_attributes||{};
+  document.querySelectorAll('#role-attr-inputs input[data-key]').forEach(function(inp){
+    var k=inp.getAttribute('data-key');
+    inp.value=ba[k]!==undefined?ba[k]:(inp.getAttribute('data-default')||0);
+  });
+  openModal('role-modal');
+}
+async function saveRole(){
+  var name=document.getElementById('role-name').value.trim();
+  if(!name){toast('Ad gerekli','e');return}
+  var key=document.getElementById('role-key').value.trim()||
+    name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'').substring(0,20)||('role_'+Date.now());
+  var ba={};
+  document.querySelectorAll('#role-attr-inputs input[data-key]').forEach(function(inp){
+    ba[inp.getAttribute('data-key')]=parseInt(inp.value)||0;
+  });
+  var d={key:key,emoji:document.getElementById('role-emoji').value||'⚔',
+    name:name,name_tr:name,name_en:name,
+    description:document.getElementById('role-desc').value,
+    description_tr:document.getElementById('role-desc').value,
+    description_en:document.getElementById('role-desc').value,
+    base_attributes:ba,
+    };
+  var rid=document.getElementById('role-id').value;
+  if(rid)d.id=parseInt(rid);
+  var r=await apiFetch('POST','/api/events/'+EID+'/roles',d);
+  if(r&&r.ok){toast('Rol kaydedildi','s');closeModal('role-modal');setTimeout(function(){reloadSection('roles')},500)}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function delRole(id){
+  if(!confirm(LNG=='tr'?'Silinsin mi?':'Delete?'))return;
+  var r=await apiFetch('DELETE','/api/events/'+EID+'/roles/'+id);
+  if(r&&r.ok){var el=document.getElementById('role-'+id);if(el)el.remove();toast('Silindi','s')}
+  else toast((r&&r.error)||'Hata','e');
+}
+
+/* ─── Senaryolar ─── */
+function previewBadgeSc(val){
+  var img=document.getElementById('sc-badge-preview');
+  if(!img) return;
+  if(val){img.src='/static/badges/'+val+'.svg';img.style.display='block';}
+  else{img.style.display='none';}
+}
+function clearScForm(){
+  document.getElementById('sc-id').value='';
+  document.getElementById('sc-name').value='';
+  document.getElementById('sc-desc').value='';
+  document.getElementById('sc-min-tasks').value=2;
+  document.getElementById('sc-bonus-xp').value=150;
+  document.getElementById('sc-first-xp').value=200;
+  document.getElementById('sc-badge').value='';previewBadgeSc('');
+  document.getElementById('sc-mtitle').textContent='◈ '+(LNG=='tr'?'Senaryo Ekle':'Add Scenario');
+  _badgeUrl='';
+  document.querySelectorAll('.badge-opt').forEach(function(img){img.style.outline='none'});
+}
+async function saveSc(){
+  var name=document.getElementById('sc-name').value.trim();
+  if(!name){toast('Ad gerekli','e');return}
+  var sid=document.getElementById('sc-id').value;
+  var d={name:name,description:document.getElementById('sc-desc').value,
+    auto_advance:false,
+    min_tasks_required:parseInt(document.getElementById('sc-min-tasks').value)||2,
+    bonus_sp:parseInt(document.getElementById('sc-bonus-xp').value)||150,
+    first_bonus_sp:parseInt(document.getElementById('sc-first-xp').value)||200,
+    bonus_badge:document.getElementById('sc-badge').value};
+  var r;
+  if(sid){r=await apiFetch('PUT','/api/content/scenarios/'+sid,d)}
+  else{r=await apiFetch('POST','/api/content/events/'+EID+'/scenarios',d)}
+  if(r&&r.ok){toast('Senaryo kaydedildi','s');closeModal('sc-modal');setTimeout(function(){reloadSection('scenarios')},500)}
+  else toast((r&&r.error)||'Hata','e');
+}
+function editSc(sc){
+  document.getElementById('sc-id').value=sc.id;
+  document.getElementById('sc-name').value=sc.name;
+  document.getElementById('sc-desc').value=sc.description||'';
+  
+  document.getElementById('sc-min-tasks').value=sc.min_tasks_required||1;
+  document.getElementById('sc-bonus-xp').value=sc.bonus_sp||500;
+  document.getElementById('sc-first-xp').value=sc.first_bonus_sp||1000;
+  document.getElementById('sc-badge').value=sc.bonus_badge||'';previewBadgeSc(sc.bonus_badge||'');
+
+  document.getElementById('sc-mtitle').textContent='◈ '+(LNG=='tr'?'Senaryo Duzenle':'Edit Scenario');
+  openModal('sc-modal');
+}
+async function deactivateSc(sid){
+  var r=await apiFetch('POST','/api/content/scenarios/'+sid+'/deactivate');
+  if(r&&r.ok){toast('Durduruldu','s');setTimeout(function(){reloadSection('scenarios')},500)}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function activateSc(sid){
+  var r=await apiFetch('POST','/api/content/scenarios/'+sid+'/activate');
+  if(r&&r.ok){toast('Aktiflestirildi','s');setTimeout(function(){reloadSection('scenarios')},500)}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function delSc(sid){
+  if(!confirm(LNG=='tr'?'Senaryo silinsin mi?':'Delete scenario?'))return;
+  var r=await apiFetch('DELETE','/api/content/scenarios/'+sid);
+  if(r&&r.ok){toast('Silindi','s');setTimeout(function(){reloadSection('scenarios')},500)}
+  else toast((r&&r.error)||'Hata','e');
+}
+
+/* ─── Gorevler ─── */
+function clearTaskForm(){
+  document.getElementById('task-id').value='';
+  document.getElementById('task-title').value='';
+  document.getElementById('task-desc').value='';
+  
+  document.getElementById('task-diff').value='orta';
+  document.getElementById('task-xp').value=300;
+  document.getElementById('task-proof').value='link';
+  document.getElementById('task-scenario').value='';
+  document.getElementById('task-mtitle').textContent='◻ '+(LNG=='tr'?'Gorev Ekle':'Add Task');
+  document.querySelectorAll('#task-attr-inputs input[data-key]').forEach(function(inp){inp.value=0});
+}
+function editTask(tk){
+  document.getElementById('task-id').value=tk.id;
+  document.getElementById('task-title').value=tk.title||tk.title_tr||'';
+  document.getElementById('task-desc').value=tk.description||tk.description_tr||'';
+  var typeEl=document.getElementById('task-type');if(typeEl)typeEl.value=tk.task_type||'';
+  document.getElementById('task-diff').value=tk.difficulty||'orta';
+  document.getElementById('task-xp').value=tk.sp_reward||300;
+  document.getElementById('task-proof').value=tk.proof_type||'link';
+  var scEl=document.getElementById('task-scenario');if(scEl)scEl.value=tk.scenario_id||'';
+  document.getElementById('task-mtitle').textContent='◻ '+(LNG=='tr'?'Görevi Düzenle':'Edit Task');
+  var ar=tk.attribute_rewards||{};
+  if(typeof ar==='string'){try{ar=JSON.parse(ar);}catch(e){ar={};}}
+  document.querySelectorAll('#task-attr-inputs input[data-key]').forEach(function(inp){
+    inp.value=ar[inp.getAttribute('data-key')]||0;
+  });
+
+  openModal('task-modal');
+}
+async function saveTask(){
+  var title=document.getElementById('task-title').value.trim();
+  if(!title){toast(LNG=='tr'?'Baslik gerekli':'Title required','e');return}
+  var scEl=document.getElementById('task-scenario');
+  var scid=scEl?scEl.value:'';
+  if(!scid){toast(LNG=='tr'?'Gorev bir senaryoya baglanmali':'Task must be linked to a scenario','e');return}
+  var spVal=parseInt(document.getElementById('task-xp').value)||0;
+  if(spVal<=0){toast(LNG=='tr'?'SP odulu 0dan buyuk olmali':'SP reward must be > 0','e');return}
+  var hasAttr=false;
+  document.querySelectorAll('#task-attr-inputs input[data-key]').forEach(function(inp){
+    if((parseInt(inp.value)||0)>0) hasAttr=true;
+  });
+  if(!hasAttr){toast(LNG=='tr'?'En az bir RPG niteligi degeri girilmeli':'At least one RPG attribute value required','e');return}
+  var ar={};
+  document.querySelectorAll('#task-attr-inputs input[data-key]').forEach(function(inp){
+    var v=parseInt(inp.value)||0;if(v>0)ar[inp.getAttribute('data-key')]=v;
+  });
+  var tid=document.getElementById('task-id').value;
+  var scEl2=document.getElementById('task-scenario');
+  var d={title:title,title_tr:title,title_en:title,
+    description:document.getElementById('task-desc').value,
+    description_tr:document.getElementById('task-desc').value,
+    description_en:document.getElementById('task-desc').value,
+    task_type:'genel',
+    difficulty:document.getElementById('task-diff').value,
+    sp_reward:parseInt(document.getElementById('task-xp').value)||300,
+    proof_type:document.getElementById('task-proof').value,
+    scenario_id:scEl2?scEl2.value||null:null,
+    attribute_rewards:ar,active:true};
+  var r;
+  if(tid){r=await apiFetch('PUT','/api/content/tasks/'+tid,d)}
+  else{r=await apiFetch('POST','/api/content/events/'+EID+'/tasks',d)}
+  if(r&&r.ok){toast('Gorev kaydedildi','s');closeModal('task-modal');setTimeout(function(){reloadSection('tasks')},500)}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function delTask(id){
+  if(!confirm(LNG=='tr'?'Silinsin mi?':'Delete?'))return;
+  var r=await apiFetch('DELETE','/api/content/tasks/'+id);
+  if(r&&r.ok){var el=document.getElementById('task-row-'+id);if(el)el.remove();toast('Silindi','s')}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function toggleTask(id,active){
+  await apiFetch('PATCH','/api/content/tasks/'+id+'/toggle',{active:active});
+}
+
+/* ─── Takimlar ─── */
+async function saveTeam(){
+  var name=document.getElementById('t-name').value.trim();
+  if(!name){toast('Ad gerekli','e');return}
+  var d={name:name,
+    telegram_group_id:document.getElementById('t-tgid').value?parseInt(document.getElementById('t-tgid').value):null,
+    telegram_group_name:document.getElementById('t-tgname').value};
+  var r=await apiFetch('POST','/api/teams/event/'+EID,d);
+  if(r&&r.ok){
+    toast((LNG=='tr'?'Takim olusturuldu. Kod: ':'Team created. Code: ')+(r.team&&r.team.invite_code),'s');
+    closeModal('team-modal');
+    setTimeout(function(){reloadSection('teams')},700);
+  } else toast((r&&r.error)||'Hata','e');
+}
+function toggleTeam(tid){
+  var body=document.getElementById('tc-body-'+tid);
+  var arrow=document.getElementById('tc-arrow-'+tid);
+  if(!body)return;
+  var open=body.style.display!='none'&&body.style.display!='';
+  body.style.display=open?'none':'block';
+  if(arrow)arrow.textContent=open?'▼':'▲';
+  if(!open)loadMem(tid);
+}
+async function loadMem(tid){
+  var el=document.getElementById('mem-'+tid);if(!el)return;
+  var members=await apiFetch('GET','/api/teams/'+tid+'/members');
+  if(!Array.isArray(members)||!members.length){el.innerHTML='<span style="color:var(--mu);font-size:.78rem">'+(LNG=='tr'?'Uye yok':'No members')+'</span>';return}
+  el.innerHTML=members.map(function(m){
+    var name=escapeHtml(m.display_name||m.username||('ID:'+m.telegram_id));
+    var tid2=parseInt(m.telegram_id)||0;
+    return '<div style="display:flex;align-items:center;gap:.4rem;padding:.25rem 0;border-bottom:1px solid var(--b1)">'
+      +'<div style="width:20px;height:20px;border-radius:50%;background:var(--acl);color:var(--ac);font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center">'+name.charAt(0).toUpperCase()+'</div>'
+      +'<div style="flex:1;font-size:.8rem;color:var(--so)">'+name+'</div>'
+      +'<span style="font-size:.65rem;font-family:\'DM Mono\',monospace;color:var(--mu)">'+escapeHtml(String(m.telegram_id))+'</span>'
+      +'<button class="btn ber_ bxs" onclick="rmMem('+tid+','+tid2+')">✕</button>'
+      +'</div>';
+  }).join('');
+}
+async function rmMem(tid,tgid){
+  if(!confirm(LNG=='tr'?'Uyeyi cikar?':'Remove member?'))return;
+  var r=await apiFetch('DELETE','/api/teams/'+tid+'/members/'+tgid);
+  if(r&&r.ok){loadMem(tid);toast('Cikarildi','s')}
+}
+function openAddMem(tid){document.getElementById('addmem-tid').value=tid;['addmem-tgid','addmem-name','addmem-username'].forEach(function(id){document.getElementById(id).value=''});document.getElementById('addmem-role').value='member';openModal('addmem-modal')}
+async function doAddMem(){
+  var tid=document.getElementById('addmem-tid').value;
+  var tgid=document.getElementById('addmem-tgid').value;
+  if(!tgid){toast('Telegram ID gerekli','e');return}
+  var r=await apiFetch('POST','/api/teams/'+tid+'/members',{telegram_id:parseInt(tgid),display_name:document.getElementById('addmem-name').value,username:(document.getElementById('addmem-username').value||'').replace('@',''),role:document.getElementById('addmem-role').value});
+  if(r&&r.ok){toast('Uye eklendi','s');closeModal('addmem-modal');loadMem(parseInt(tid))}
+  else toast((r&&r.error)||'Hata','e');
+}
+function editTeam(id,name,tgid,tgname){
+  document.getElementById('edit-team-id').value=id;
+  document.getElementById('edit-team-title').textContent='✎ '+name;
+  document.getElementById('edit-team-name').value=name||'';
+  document.getElementById('edit-team-tgid').value=(tgid&&tgid!='null')?tgid:'';
+  document.getElementById('edit-team-tgname').value=tgname||'';
+  openModal('edit-team-modal');
+}
+async function saveEditTeam(){
+  var tid=document.getElementById('edit-team-id').value;
+  var name=document.getElementById('edit-team-name').value.trim();
+  var tgid=document.getElementById('edit-team-tgid').value.trim();
+  var tgname=document.getElementById('edit-team-tgname').value.trim();
+  if(!name){toast('Ad gerekli','e');return}
+  var tgidInt=tgid?parseInt(tgid):null;
+  var d={name:name,telegram_group_id:tgidInt,telegram_group_name:tgname||null};
+  console.log('[saveEditTeam] tid='+tid+' tgid='+tgidInt+' data=',d);
+  var r=await apiFetch('PATCH','/api/teams/'+tid+'/edit',d);
+  console.log('[saveEditTeam] response=',r);
+  if(r&&r.ok){
+    toast('✓ Kaydedildi','s');
+    closeModal('edit-team-modal');
+    setTimeout(function(){location.reload()},600);
+  } else toast((r&&r.error)||'Hata','e');
+}
+function openXP(tid,name){document.getElementById('xp-tid').value=tid;document.getElementById('xp-modal-title').textContent='⭐ +BP — '+name;document.getElementById('xp-amount').value=100;openModal('xp-modal')}
+async function doXP(){
+  var tid=document.getElementById('xp-tid').value;
+  var xp=parseInt(document.getElementById('xp-amount').value)||0;
+  if(xp<=0)return;
+  var r=await apiFetch('POST','/api/teams/'+tid+'/xp',{xp:xp});
+  if(r&&r.ok){toast('+'+xp+' BP','s');closeModal('xp-modal')}
+  else toast((r&&r.error)||'Hata','e');
+}
+async function delTeam(id){
+  if(!confirm(LNG=='tr'?'Takim silinsin mi?':'Delete team?'))return;
+  var r=await apiFetch('DELETE','/api/teams/'+id);
+  if(r&&r.ok){var el=document.getElementById('tc-'+id);if(el){el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(function(){el.remove()},300)}toast('Silindi','s')}
+  else toast((r&&r.error)||'Hata','e');
+}
+
+/* ─── Onaylar ─── */
+async function reviewTask(cid,status){
+  var el=document.getElementById('ap-'+cid);
+  if(el){var btns=el.querySelectorAll('button');btns.forEach(function(b){b.disabled=true})}
+  var r=await apiFetch('POST','/api/teams/completions/'+cid+'/review',{status:status,note:''});
+  if(r&&r.ok){
+    toast(status=='approved'?'✅ Onaylandı':'❌ Reddedildi',status=='approved'?'s':'e');
+    if(r.scenario_bonus&&r.scenario_bonus.triggered){
+      toast('🏆 Senaryo bonusu: +'+r.scenario_bonus.bonus_sp+' SP','s');
+    }
+    // Listeyi yenile
+    setTimeout(function(){loadApprovals();},400);
+  } else {
+    if(el){el.querySelectorAll('button').forEach(function(b){b.disabled=false})}
+    toast((r&&r.error)||'Hata','e');
+  }
+}
+
+/* ─── Duyuru ─── */
+function highlightAnnType(){
+  ['info','warning','success'].forEach(function(t){
+    var lbl=document.getElementById('ann-type-'+t+'-lbl');
+    var inp=document.querySelector('input[name="ann-type"][value="'+t+'"]');
+    if(lbl&&inp) lbl.style.borderColor=inp.checked?'var(--ac)':'var(--b2)';
+  });
+}
+function toggleAnnAll(){
+  var all=document.getElementById('ann-all').checked;
+  document.querySelectorAll('.ann-team-cb').forEach(function(cb){cb.checked=all});
+}
+function syncAnnAll(){
+  var cbs=document.querySelectorAll('.ann-team-cb');
+  var allChecked=Array.from(cbs).every(function(cb){return cb.checked});
+  document.getElementById('ann-all').checked=allChecked;
+}
+async function sendAnn(){
+  var msg=document.getElementById('ann-msg').value.trim();
+  if(!msg){toast(LNG=='tr'?'İçerik gerekli':'Message required','e');return}
+  var annTypeEl=document.querySelector('input[name="ann-type"]:checked');
+  var annType=annTypeEl?annTypeEl.value:'info';
+  var titleVal=document.getElementById('ann-title').value.trim();
+  var allChecked=document.getElementById('ann-all').checked;
+  var teamIds=[];
+  if(!allChecked){
+    document.querySelectorAll('.ann-team-cb:checked').forEach(function(cb){teamIds.push(parseInt(cb.value))});
+    if(!teamIds.length){toast(LNG=='tr'?'En az bir takım seçin':'Select at least one team','e');return}
+  }
+  var d={title:titleVal,title_tr:titleVal,title_en:titleVal,
+         message_tr:msg,message_en:msg,ann_type:annType};
+  var r=await apiFetch('POST','/api/content/events/'+EID+'/announcements',d);
+  if(r&&r.ok){
+    toast(LNG=='tr'?'✓ Kaydedildi':'✓ Saved','s');
+    document.getElementById('ann-title').value='';
+    document.getElementById('ann-msg').value='';
+    var payload={event_id:EID,message:msg,ann_type:annType,title:titleVal};
+    if(!allChecked) payload.team_ids=teamIds;
+    var tgr=await apiFetch('POST','/api/bot/broadcast',payload);
+    if(tgr&&tgr.ok){
+      if(tgr.sent>0)
+        toast('📢 Telegram: '+tgr.sent+(LNG=='tr'?' gruba gönderildi':' group(s) sent'),'s');
+      else if(tgr.warning)
+        toast('⚠ '+tgr.warning,'w');
+      else
+        toast(LNG=='tr'?'⚠ Telegram Grup ID girilmemiş':'⚠ No Telegram Group ID set','w');
+    } else {
+      toast('✗ '+(tgr&&tgr.error||'Telegram hatası'),'e');
+    }
+  } else toast((r&&r.error)||'Hata','e');
+}
+
+/* ─── Emoji ─── */
+document.addEventListener('DOMContentLoaded',function(){
+  ['attr-emoji','role-emoji'].forEach(function(hid){
+    var h=document.getElementById(hid);
+    var d=document.getElementById(hid+'-display');
+    if(h&&d)h.addEventListener('change',function(){d.textContent=h.value||'⭐'});
+  });
+});
+
+/* ─── Reload (sekmede kal) ─── */
+function reloadSection(sec){
+  var url=new URL(window.location.href);
+  url.searchParams.set('sec',sec);
+  window.history.replaceState({},'',url);
+  location.reload();
+}
+(function(){
+  var sec=new URLSearchParams(window.location.search).get('sec');
+  if(sec)setTimeout(function(){gotoSec(sec)},150);
+})();
+
+/* ─── Badge (combobox) ─── */
+function selectBadgeColor(val,el){ /* kaldırıldı - combobox kullanılıyor */ }
+function previewBadge(){ /* kaldırıldı - previewBadgeSc kullanılıyor */ }
+async function loadAnnLog(){
+  var el=document.getElementById('ann-log');
+  if(!el)return;
+  if(el.style.display==='none'||el.style.display===''){
+    el.style.display='block';
+    el.innerHTML='<div style="color:var(--mu);font-size:.8rem;padding:.5rem">Yukleniyor...</div>';
+    var r=await apiFetch('GET','/api/content/events/'+EID+'/announcements');
+    if(!r||r.error){el.innerHTML='<div style="color:var(--er);font-size:.8rem">Hata</div>';return}
+    if(!Array.isArray(r)||!r.length){el.innerHTML='<div style="color:var(--mu);font-size:.8rem;padding:.5rem">Gecmis duyuru yok.</div>';return}
+    var icons={info:'ℹ️',success:'✅',warning:'⚠️',error:'❌'};
+    el.innerHTML=r.map(function(a){
+      var d=new Date(a.created_at||Date.now());
+      var ds=d.toLocaleDateString('tr-TR')+' '+d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+      return '<div style="padding:.5rem 0;border-bottom:1px solid var(--b1)">'
+        +(icons[a.ann_type]||'📢')+' <b>'+escapeHtml(a.title_tr||'Duyuru')+'</b>'
+        +' <span style="color:var(--mu);font-size:.7rem;margin-left:.4rem">'+ds+'</span>'
+        +'<div style="color:var(--di);font-size:.82rem;margin-top:.2rem">'+escapeHtml(a.message_tr||'')+'</div>'
+        +'</div>';
+    }).join('');
+  } else {
+    el.style.display='none';
+  }
+}
+
+function markApprovalBadge(){
+  var badge=document.getElementById('pending-badge');
+  if(!badge){
+    var btn=document.querySelector('.sblink[onclick*="approvals"]');
+    if(btn){
+      badge=document.createElement('span');
+      badge.id='pending-badge';
+      badge.style.cssText='margin-left:auto;background:var(--er);color:#fff;font-size:.6rem;padding:.06rem .35rem;border-radius:10px';
+      btn.appendChild(badge);
+    }
+  }
+  if(badge) badge.textContent=_lastPending;
+}
+
+var _lastPending={{ pending|length }};
+
+async function loadApprovals(){
+  var box=document.getElementById('approvals-dynamic');
+  var stat=document.getElementById('approvals-static');
+  if(!box) return;
+  box.innerHTML='<div style="text-align:center;padding:1rem;color:var(--mu);font-size:.82rem">⏳ Yükleniyor...</div>';
+  try{
+    var rows=await apiFetch('GET','/api/teams/event/'+EID+'/completions?status=pending');
+    if(!rows||!rows.length){
+      box.innerHTML='';
+      if(stat) stat.style.display='';
+      // badge güncelle
+      var badge=document.getElementById('pending-badge');
+      if(badge) badge.style.display='none';
+      return;
+    }
+    if(stat) stat.style.display='none';
+    var html2='';
+    rows.forEach(function(p){
+      html2+='<div style="background:var(--bg2);border:1px solid var(--b1);border-radius:12px;padding:1rem 1.25rem;margin-bottom:.5rem">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">'+
+          '<div>'+
+            '<div style="font-weight:700;color:var(--wh);font-size:.95rem">'+p.title+'</div>'+
+            '<div style="font-size:.78rem;font-family:monospace;color:var(--mu);margin-top:.2rem">'+
+              p.team_name+' · '+p.submitted_by+
+            '</div>'+
+            (p.proof_url?'<a href="'+p.proof_url+'" target="_blank" style="font-size:.78rem;color:var(--ac);display:block;margin-top:.3rem">🔗 Kanıt</a>':'')+ 
+          '</div>'+
+          '<div style="display:flex;gap:.4rem;flex-shrink:0">'+
+            '<button class="btn bp bsm" onclick="reviewTask('+p.id+',\'approved\')">✅ Onayla</button>'+
+            '<button class="btn ber_ bsm" onclick="reviewTask('+p.id+',\'rejected\')">❌ Reddet</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    });
+    box.innerHTML=html2;
+    // badge güncelle
+    var badge=document.getElementById('pending-badge');
+    if(!badge){
+      var btn=document.querySelector('.sblink[onclick*="approvals"]');
+      if(btn){
+        var sp=document.createElement('span');
+        sp.id='pending-badge';
+        sp.style.cssText='margin-left:auto;background:var(--er);color:#fff;font-size:.6rem;padding:.06rem .35rem;border-radius:10px';
+        btn.appendChild(sp);
+        badge=sp;
+      }
+    }
+    if(badge) badge.textContent=rows.length;
+    _lastPending=rows.length;
+  }catch(e){box.innerHTML='<div style="color:var(--er);padding:1rem;font-size:.85rem">Hata: '+e.message+'</div>';}
+}
+
+setInterval(async function(){
+  try{
+    var r=await fetch('/api/teams/event/'+EID+'/pending-count',{credentials:'include'});
+    if(!r.ok)return;
+    var d=await r.json();
+    if(d.count!==_lastPending){
+      _lastPending=d.count;
+      markApprovalBadge();
+      if(d.count>0) toast('📬 Yeni görev onay bekliyor!','i');
+      // Onaylar sekmesi açıksa listeyi hemen güncelle
+      var appSec=document.getElementById('sec-approvals');
+      if(appSec&&appSec.classList.contains('on')) loadApprovals();
+    }
+  }catch(e){}
+},8000);
+
+function onWS(msg){
+  if(msg.type=='new_completion'){
+    // Toast bildirimi
+    toast('Yeni gorev gonderimi: '+(msg.task_title||''),'i');
+    // Onaylar sekmesine badge ekle
+    var approvalBtn=document.querySelector(".sblink[onclick*=\"approvals\"]");
+    if(approvalBtn&&!approvalBtn.querySelector('.new-badge')){
+      var badge=document.createElement('span');
+      badge.className='new-badge';
+      badge.style.cssText='margin-left:auto;background:var(--er);color:#fff;font-size:.6rem;padding:.06rem .35rem;border-radius:10px;animation:gp 1s infinite';
+      badge.textContent='Yeni';
+      approvalBtn.appendChild(badge);
+    }
+  }
+}
+</script>
+{% endblock %}

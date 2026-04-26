@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="{{ lang|default('tr') }}" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ brand.name }} — {{ t.admin.login_title }}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('alev-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
+<style>
+:root,[data-theme=dark]{--bg:#0d0e0f;--bg2:#141618;--bg3:#1c1f22;--b1:#2e3438;--b2:#3d444b;--mu:#5a6370;--so:#c4cdd6;--wh:#f0f4f8;--ac:#f59e0b;--acl:rgba(245,158,11,.12);--er:#ef4444;--gl:0 0 0 3px rgba(245,158,11,.22)}
+[data-theme=light]{--bg:#f0f4f8;--bg2:#fff;--bg3:#e8edf2;--b1:#c8d0db;--b2:#b0bbc8;--mu:#7a8899;--so:#2a3545;--wh:#111820;--ac:#d97706;--acl:rgba(217,119,6,.1);--er:#dc2626;--gl:0 0 0 3px rgba(217,119,6,.2)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:17px;-webkit-font-smoothing:antialiased}
+body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--so);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:var(--bg2);border:1px solid var(--b1);border-radius:18px;padding:2.25rem;width:100%;max-width:380px;box-shadow:0 32px 80px rgba(0,0,0,.45)}
+.brand{font-weight:900;font-size:1.3rem;color:var(--wh);letter-spacing:.06em;text-transform:uppercase;text-align:center;display:flex;align-items:center;justify-content:center;gap:.4rem;margin-bottom:.3rem}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ac);box-shadow:0 0 8px var(--ac);animation:gp 2s infinite}
+@keyframes gp{0%,100%{box-shadow:0 0 8px var(--ac)}50%{box-shadow:0 0 3px var(--ac)}}
+.sub{text-align:center;font-size:.75rem;font-family:'DM Mono',monospace;color:var(--mu);margin-bottom:1.75rem}
+.fl{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:.38rem;font-family:'DM Mono',monospace}
+.fi{width:100%;padding:.65rem .9rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:9px;color:var(--so);font-size:.92rem;font-family:'Outfit',sans-serif;transition:all .18s;outline:none}
+.fi:focus{border-color:var(--ac);box-shadow:var(--gl);color:var(--wh)}
+.fg{margin-bottom:.85rem}
+.btn{width:100%;padding:.72rem;border-radius:9px;font-size:.92rem;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;border:none;background:var(--ac);color:#0d0e0f;transition:all .18s;margin-top:.5rem}
+.btn:hover{background:#d97706;transform:translateY(-1px)}
+.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);border-radius:9px;padding:.65rem .85rem;color:var(--er);font-size:.85rem;margin-bottom:1rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="card">
+  <div style="text-align:center;margin-bottom:1.25rem">
+    <img src="/static/logo.png" alt="ALEV" style="height:90px;width:auto;filter:drop-shadow(0 0 16px rgba(245,158,11,.5))">
+  </div>
+  <div class="brand" style="margin-bottom:.2rem"><span class="dot"></span>{{ brand.name }}</div>
+  <div class="sub">{{ t.admin.login_title }}</div>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="POST" action="/admin/login" style="display:flex;flex-direction:column;gap:0">
+    <div class="fg"><label class="fl">{{ t.admin.username }}</label><input class="fi" name="username" autofocus autocomplete="username"></div>
+    <div class="fg"><label class="fl">{{ t.admin.password }}</label><input class="fi" name="password" type="password" autocomplete="current-password"></div>
+    <button type="submit" class="btn">{{ t.admin.login_btn }}</button>
+  </form>
+</div>
+</body>
+</html>

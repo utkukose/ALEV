@@ -1,0 +1,130 @@
+{
+  "lang_code": "tr",
+  "lang_name": "Türkçe",
+  "lang_flag": "🇹🇷",
+  "commands": {
+    "start": "Başlat",
+    "register": "Takım kaydet",
+    "tasks": "Aktif görevler",
+    "complete": "Görev tamamla",
+    "events": "Senaryo & etkinlikler",
+    "score": "Liderlik tablosu",
+    "profile": "Profilim",
+    "duel": "Meydan oku",
+    "score_jury": "Jüri puanı ver",
+    "jury_result": "Jüri sonuçları",
+    "language": "Dil değiştir",
+    "help": "Yardım"
+  },
+  "start": {
+    "welcome_back": "🔥 Hoş geldin, *{team_name}*!\nRol: {role}\n`{bar}` {xp} BP\n\nKomutlar için /help yazın.",
+    "welcome_new": "🔥 *{brand_name}*'e hoş geldiniz!\n_{brand_full}_\n\nBaşlamak için:\n`/register <takım_adı>`"
+  },
+  "register": {
+    "already_registered": "Zaten kayıtlısınız! /profile yazın.",
+    "usage": "Kullanım: `/register <takım_adı>`",
+    "success": "✅ *{team_name}* kaydedildi!\n\nŞimdi ekip rolünüzü seçin:",
+    "choose_role": "⚔️ Ekip rolünüzü seçin:"
+  },
+  "role": {
+    "selected": "⚔️ Rol seçildi: *{emoji} {name}*\n\nBaşlangıç nitelikleri:\n{stats}\n\n/tasks yazarak başlayın! 🚀"
+  },
+  "tasks": {
+    "header": "📋 *Aktif Görevler*",
+    "stage_active": "\n⚡ *{stage_name}* aşaması aktif — `{mult}x BP`\n",
+    "item": "{status} *[{id}]* *{title}*\n   `+{xp} BP` · {difficulty}\n   {description}\n",
+    "bonus_tag": " _(x{mult})_",
+    "footer": "\nTamamlamak için: `/complete <id> <kanıt_linki>`",
+    "ids_label": "Görev ID'leri: "
+  },
+  "complete": {
+    "usage": "Kullanım: `/complete <görev_id> <kanıt_linki>`\nGörev ID'leri için /tasks yazın",
+    "invalid_task": "❌ `{id}` geçersiz, aktif değil veya senaryosu aktif değil.",
+    "already_done": "Bu görevi zaten tamamladınız! ✅",
+    "submitted": "📨 *{title}* tamamlama isteğiniz gönderildi.\n⏳ Onay bekleniyor!"
+  },
+  "approval": {
+    "approved": "🎉 *Görev onaylandı!*\n\n*{title}*\n+*{xp} BP*{bonus}\n\nTakım toplam BP: *{team_bp}*",
+    "leveled_up": "\n\n🆙 *Seviye atladınız!* Lv.{level}",
+    "level_reward": " +{reward} BP bonusu!",
+    "attr_changes": "\n📊 Nitelik katkısı: {changes}",
+    "badge_earned": "\n🏅 *{name}* rozeti kazanıldı!",
+    "unlocked_tasks": "\n🔓 Yeni görev açıldı: {tasks}",
+    "rejected": "❌ *{title}* reddedildi.\nKanıtı güncelleyip tekrar gönderin.",
+    "group_announce": "🌿 *{team}* — *{title}* tamamladı! +{xp} BP"
+  },
+  "admin_notify": {
+    "approval_request": "📬 *Görev Onay İsteği #{id}*\n\nTakım: *{team}*\nGörev: *{title}*\nTür: `{type}` · {difficulty}\nKanıt: {proof}"
+  },
+  "score": {
+    "header_global": "🏆 *{brand} — Liderlik Tablosu*\n",
+    "header_local": "🏆 *{brand} — Yerel Sıralama*\n",
+    "row": "{medal} *{team}* · {role}\n   `{bar}` {bp} BP\n",
+    "empty": "Henüz kayıtlı takım yok."
+  },
+  "profile": {
+    "header": "👤 *{team}*\nRol: {role}\n`{bar}` {bp} BP\n\nTamamlanan: *{done}/{total}*\n\n*Nitelikler:*\n{stats}",
+    "jury_section": "\n\n*Jüri Puanları:*\n{scores}",
+    "badges_section": "\n\n*Rozetler:* {badges}",
+    "not_registered": "❌ Kayıtlı değilsiniz. /register yazın."
+  },
+  "duel": {
+    "usage": "Kullanım: `/duel <rakip_adı>`",
+    "not_found": "*{name}* bulunamadı. /score ile bakın.",
+    "self": "Kendinize meydan okuyamazsınız!",
+    "result": "⚔️ *İklim Düellosu*\n\n*{challenger}* — {c_score}\n*{defender}* — {d_score}\n\n🏆 *{winner}* kazandı! +{xp} BP\n{attr}",
+    "group_announce": "⚔️ *{challenger}* vs *{defender}* → *{winner}* kazandı!"
+  },
+  "events": {
+    "header": "📅 *Etkinlik & Senaryo Durumu*\n",
+    "scenario_active": "🔥 *Aktif Senaryo:* {name}\n   Aşama: *{stage}* · `{mult}x BP`\n",
+    "no_scenario": "○ Aktif senaryo yok.\n",
+    "event_row": "{emoji} *{title}*\n   `{date}` · {type}\n",
+    "task_count": "   Görevler: *{done}* tamamlandı\n"
+  },
+  "jury": {
+    "disabled": "Jüri sistemi aktif değil.",
+    "not_member": "Bu komut sadece jüri üyelerine açıktır.",
+    "usage": "Kullanım: `/score_jury <takım_adı> <kriter_id> <0-100>`\nKriterler: {criteria}",
+    "team_not_found": "*{name}* bulunamadı.",
+    "criterion_not_found": "Kriter `{id}` bulunamadı.",
+    "score_range": "Puan {min} ile {max} arasında olmalı.",
+    "saved": "✅ *{team}* — {emoji} {criterion}: *{score}*\n_Kaydedildi._",
+    "results_header": "⚖️ *Jüri Sonuçları*\n",
+    "results_row": "*{team}* — Toplam: `{total}`\n{scores}\n",
+    "results_empty": "Henüz jüri puanı yok."
+  },
+  "language": {
+    "changed": "🇹🇷 Dil *Türkçe* olarak ayarlandı.",
+    "usage": "Kullanım: `/language <kod>`\nMevcut: `tr` (Türkçe), `en` (English)"
+  },
+  "admin": {
+    "xp_usage": "Kullanım: `/xp <takım_adı> <miktar>`",
+    "xp_not_found": "Takım bulunamadı.",
+    "xp_success": "✅ *{team}* → {sign}{amount} BP",
+    "announce_usage": "Kullanım: `/announce <mesaj>`",
+    "announce_sent": "✅ Duyuru tüm gruplara gönderildi.",
+    "unauthorized": "Yetkisiz işlem."
+  },
+  "help": {
+    "text": "🔥 *{brand} Komutları*\n\n*/register <ad>* — Takım kaydet\n*/tasks* — Aktif görevler\n*/complete <id> <kanıt>* — Görev tamamla\n*/events* — Senaryo & etkinlikler\n*/score* — Liderlik tablosu\n*/profile* — Profilim\n*/duel <rakip>* — Meydan oku\n*/language <kod>* — Dil değiştir (tr/en)\n\n_Jüri:_ `/score_jury`, `/jury_result`\n_Admin:_ `/xp`, `/announce`"
+  },
+  "scenario": {
+    "started": "🔥 *{scenario_name}* başladı!\n*{stage_name}*: {description}",
+    "advanced": "🔥 *{stage_name}* başladı!\n{description}",
+    "completed": "🏁 {message}",
+    "stopped": "⏹ Senaryo durduruldu.",
+    "xp_bonus": "\n⚡ BP çarpanı: *{mult}x* bu aşamada"
+  },
+  "difficulty": {
+    "easy": "Kolay",
+    "medium": "Orta",
+    "hard": "Zor",
+    "legendary": "Efsane"
+  },
+  "errors": {
+    "generic": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "db": "Veritabanı hatası. Yönetici ile iletişime geçin.",
+    "not_registered": "❌ Kayıtlı değilsiniz. Başlamak için /register yazın."
+  }
+}

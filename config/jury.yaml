@@ -1,0 +1,50 @@
+# ─────────────────────────────────────────────────────────
+# ALEV v2 — Jüri Sistemi Konfigürasyonu
+# ─────────────────────────────────────────────────────────
+
+jury:
+  enabled: true
+  # Jüri puanının final skora ağırlığı (%):
+  # xp_weight + jury_weight = 100 olmalı
+  xp_weight: 60         # Görev XP'sinin ağırlığı
+  jury_weight: 40       # Jüri puanının ağırlığı
+
+  # Jüri üyeleri (Telegram user_id listesi)
+  # Bu kişiler /puan komutunu kullanabilir
+  members: []           # [123456789, 987654321]
+
+  # Puanlama kriterleri — her kriter 0-100 arası puan alır
+  criteria:
+    - id: "yenilikcilik"
+      name_tr: "Yenilikçilik"
+      name_en: "Innovation"
+      weight: 0.30        # Toplam jüri puanındaki ağırlık
+      emoji: "💡"
+
+    - id: "etki"
+      name_tr: "Çevresel Etki"
+      name_en: "Environmental Impact"
+      weight: 0.35
+      emoji: "🌿"
+
+    - id: "uygulanabilirlik"
+      name_tr: "Uygulanabilirlik"
+      name_en: "Feasibility"
+      weight: 0.20
+      emoji: "🔧"
+
+    - id: "sunum"
+      name_tr: "Sunum Kalitesi"
+      name_en: "Presentation"
+      weight: 0.15
+      emoji: "🎤"
+
+  # Jüri botu komutları:
+  #   /puan @takim_adi yenilikcilik 85
+  #   /puan_goster @takim_adi
+  #   /jury_sonuc (tüm sonuçları yayınla)
+  scoring:
+    min: 0
+    max: 100
+    allow_update: true      # Jüri puanını güncelleyebilir mi?
+    anonymous: false        # Puanlar anonim mi?

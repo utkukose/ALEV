@@ -1,0 +1,15 @@
+{% extends "shared/base.html" %}
+{% block title %}{{ brand.name }}{% endblock %}
+{% block content %}
+<div class="container" style="text-align:center;padding:5rem 1rem;position:relative;z-index:1">
+  <div style="font-size:3rem;margin-bottom:1rem">🔥</div>
+  <h1 style="font-size:1.8rem;font-weight:900;color:var(--wh);margin-bottom:.5rem">{{ brand.name }}</h1>
+  <div style="font-size:.9rem;color:var(--mu);margin-bottom:2rem;font-family:'DM Mono',monospace">{{ brand.full_name }}</div>
+  <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:2rem;max-width:380px;margin:0 auto">
+    <div style="font-size:.9rem;color:var(--so);margin-bottom:1.25rem">
+      {% if lang=='tr' %}Şu an aktif etkinlik bulunmuyor. Yakında görüşürüz!{% else %}No active event right now. See you soon!{% endif %}
+    </div>
+    <a href="/admin" class="btn bp bsm">Admin Panel</a>
+  </div>
+</div>
+{% endblock %}

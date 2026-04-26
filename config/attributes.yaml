@@ -1,0 +1,112 @@
+# ─────────────────────────────────────────────
+# ALEV — Nitelik Şemaları & Rozetler
+# ─────────────────────────────────────────────
+
+# ─── Takım nitelikleri ───────────────────────
+team_attributes:
+  guc:
+    display_name: "Güç"
+    emoji: "💪"
+    description: "Teknik proje kapasitesi ve uygulama gücü."
+    min: 0
+    max: 20
+    default: 5
+
+  cevre_puani:
+    display_name: "Çevre Puanı"
+    emoji: "🌿"
+    description: "Çevresel etki ve sürdürülebilirlik odağı."
+    min: 0
+    max: 20
+    default: 5
+
+  analitik:
+    display_name: "Analitik"
+    emoji: "📊"
+    description: "Veri analizi ve problem çözme yetkinliği."
+    min: 0
+    max: 20
+    default: 5
+
+  topluluk:
+    display_name: "Topluluk"
+    emoji: "🤝"
+    description: "Toplumsal katılım ve iletişim becerisi."
+    min: 0
+    max: 20
+    default: 5
+
+# ─── Üye nitelikleri (bireysel) ──────────────
+member_attributes:
+  katki_skoru:
+    display_name: "Katkı Skoru"
+    emoji: "⭐"
+    description: "Takıma bireysel katkı miktarı."
+    min: 0
+    max: 100
+    default: 0
+
+  aktiflik:
+    display_name: "Aktiflik"
+    emoji: "🔥"
+    description: "Son 7 günde tamamlanan görev/etkinlik sayısı."
+    min: 0
+    max: 100
+    default: 0
+
+# ─── Rozetler ────────────────────────────────
+badges:
+  su_senoru:
+    display_name: "Su Sensörü"
+    emoji: "💧"
+    description: "Su kalitesi görevini tamamladı."
+    rarity: yaygin
+
+  kod_savascisi:
+    display_name: "Kod Savaşçısı"
+    emoji: "⚔️"
+    description: "Yazılım tabanlı iklim çözümü geliştirdi."
+    rarity: nadir
+
+  dogaci:
+    display_name: "Doğacı"
+    emoji: "🦋"
+    description: "Yerel tür kataloğu oluşturdu."
+    rarity: yaygin
+
+  gunes_muhendisi:
+    display_name: "Güneş Mühendisi"
+    emoji: "☀️"
+    description: "Güneş enerjisi fizibilite raporu hazırladı."
+    rarity: yaygin
+
+  egitimci:
+    display_name: "Eğitimci"
+    emoji: "📚"
+    description: "İklim farkındalık materyali hazırladı."
+    rarity: yaygin
+
+  duel_sampiyon:
+    display_name: "Düello Şampiyonu"
+    emoji: "🏆"
+    description: "Takımlar arası düelloda galip geldi."
+    rarity: epik
+
+  ilk_adim:
+    display_name: "İlk Adım"
+    emoji: "👣"
+    description: "İlk görevini tamamladı."
+    rarity: yaygin
+
+  hizli_baslangiç:
+    display_name: "Hızlı Başlangıç"
+    emoji: "🚀"
+    description: "İlk gün 2 görev tamamladı."
+    rarity: nadir
+
+# ─── Rozet nadirlik renkleri (bot'ta badge gösterimi) ───
+rarity_colors:
+  yaygin: green
+  nadir: blue
+  epik: purple
+  efsane: amber

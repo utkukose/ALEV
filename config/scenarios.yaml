@@ -1,0 +1,86 @@
+# ─────────────────────────────────────────────────────────
+# ALEV v2 — Hackathon Senaryo Zincirleri
+#
+# Senaryo = Aşamalı hackathon tanımı.
+# Her aşama bir öncekinin tamamlanmasıyla veya
+# zamana göre otomatik başlar.
+# ─────────────────────────────────────────────────────────
+
+scenarios:
+  - id: "klasik_hackathon"
+    name: "Klasik Hackathon"
+    description: "3 aşamalı standart hackathon senaryosu"
+    active: true
+    auto_advance: true          # Süre dolunca otomatik sonraki aşama
+    announce_to_all_groups: true
+
+    stages:
+      - id: "stage_1"
+        name: "Keşif Aşaması"
+        description: >
+          Takımlar problemi analiz eder, alan araştırması yapar
+          ve çözüm yaklaşımını belirler.
+        order: 1
+        duration_minutes: 120
+        starts_at: null         # null = manuel başlatma; "2026-05-01T09:00" = otomatik
+        task_set: "kesif"       # Bu aşamada hangi görev seti aktif
+        xp_multiplier: 1.0
+        completion_message_tr: >
+          🔥 Keşif Aşaması tamamlandı! Tasarım Aşamasına geçiliyor.
+        completion_message_en: >
+          🔥 Discovery Stage complete! Moving to Design Stage.
+        unlock_next_on: "time"  # time | manual | all_tasks_done
+
+      - id: "stage_2"
+        name: "Tasarım & Prototip"
+        description: >
+          Çözüm tasarlanır, prototip geliştirilir ve
+          ilk testler yapılır.
+        order: 2
+        duration_minutes: 180
+        starts_at: null
+        task_set: "prototip"
+        xp_multiplier: 1.5      # Bu aşamada XP %50 fazla
+        completion_message_tr: >
+          🔥 Tasarım Aşaması bitti! Final Sunum Aşamasına geçiliyor.
+        completion_message_en: >
+          🔥 Design Stage complete! Moving to Final Presentation.
+        unlock_next_on: "time"
+
+      - id: "stage_3"
+        name: "Final Sunumu"
+        description: >
+          Takımlar projelerini jüriye sunar.
+          Jüri puanları sisteme girilir.
+        order: 3
+        duration_minutes: 90
+        starts_at: null
+        task_set: "final"
+        xp_multiplier: 2.0      # Final aşaması 2x XP
+        completion_message_tr: >
+          🏆 Hackathon tamamlandı! Sonuçlar açıklanıyor...
+        completion_message_en: >
+          🏆 Hackathon complete! Results incoming...
+        unlock_next_on: "manual"
+        is_final: true
+
+  - id: "sprint_yarismasi"
+    name: "Sprint Yarışması"
+    description: "Tek aşamalı hızlı yarışma (3 saat)"
+    active: false
+    auto_advance: false
+    announce_to_all_groups: true
+
+    stages:
+      - id: "sprint_main"
+        name: "Sprint"
+        description: "Tek aşamalı yoğun geliştirme süreci"
+        order: 1
+        duration_minutes: 180
+        starts_at: null
+        task_set: "default"
+        xp_multiplier: 1.0
+        completion_message_tr: "🏁 Sprint tamamlandı!"
+        completion_message_en: "🏁 Sprint complete!"
+        unlock_next_on: "manual"
+        is_final: true

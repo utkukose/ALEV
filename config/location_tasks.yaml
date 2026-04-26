@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────
+# ALEV v2 — Konum Bazlı Görev Tanımları
+#
+# Her konum görevi, tasks.yaml'daki bir görev ID'siyle
+# eşleştirilir. Katılımcı belirlenen koordinata gittiğinde
+# /checkin yazar ve konumunu paylaşır.
+# Bot koordinatları kontrol eder, radius içindeyse
+# görevi otomatik onaylar (admin onayı gerekmez).
+# ─────────────────────────────────────────────────────────
+
+location_tasks:
+  - task_id: "burdur_golu_olcum"        # tasks.yaml'daki id
+    name_tr: "Burdur Gölü Kıyısı"
+    name_en: "Lake Burdur Shore"
+    lat: 37.7262                          # Burdur Gölü kıyısı örnek koordinat
+    lon: 30.1553
+    radius_meters: 150                    # 150 metre tolerans
+    hint_tr: "Gölün kuzey kıyısına gidin, iskelede konum paylaşın."
+    hint_en: "Go to the north shore of the lake and share location at the pier."
+
+  - task_id: "egirdir_alan_arastirma"
+    name_tr: "Eğirdir Göl Kıyısı"
+    name_en: "Lake Eğirdir Shore"
+    lat: 37.8782
+    lon: 30.8533
+    radius_meters: 200
+    hint_tr: "Eğirdir iskele meydanında konumunuzu paylaşın."
+    hint_en: "Share your location at Eğirdir pier square."
+
+  - task_id: "saglik_ocagi_ziyaret"
+    name_tr: "Sağlık Ocağı Ziyareti"
+    name_en: "Health Center Visit"
+    lat: 37.7200
+    lon: 30.2800
+    radius_meters: 100
+    hint_tr: "Burdur Merkez Sağlık Ocağı önünden konum paylaşın."
+    hint_en: "Share location from in front of the Burdur Central Health Center."

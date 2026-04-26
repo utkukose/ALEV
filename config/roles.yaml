@@ -1,0 +1,118 @@
+# ─────────────────────────────────────────────
+# ALEV — Rol Tanımları
+# Buradaki her rol serbestçe düzenlenebilir.
+# Yeni rol eklemek için bloğu kopyalayıp yapıştırın.
+# ─────────────────────────────────────────────
+
+roles:
+  ormanc:
+    display_name: "Ormancı"
+    emoji: "🌲"
+    description: "Biyoçeşitlilik ve orman ekosistemi görevlerinde uzman."
+    color: "green"
+    bonus_task_types:           # Bu türdeki görevlerde XP çarpanı uygulanır
+      - biyocesitlilik
+      - habitat
+    bonus_multiplier: 1.30      # %30 bonus
+    stats:                      # Başlangıç nitelik değerleri
+      guc: 6
+      cevre_puani: 9
+      analitik: 5
+      topluluk: 7
+    max_members: 6              # Takım başına maksimum üye
+    unlocks_at_level: 1         # Kaç. seviyede açılır (1 = baştan)
+
+  su_koruyucusu:
+    display_name: "Su Koruyucusu"
+    emoji: "💧"
+    description: "Göl, akarsu ve sulak alan ekosistemlerini izler."
+    color: "teal"
+    bonus_task_types:
+      - su_kalitesi
+      - sulak_alan
+    bonus_multiplier: 1.30
+    stats:
+      guc: 5
+      cevre_puani: 9
+      analitik: 8
+      topluluk: 6
+    max_members: 6
+    unlocks_at_level: 1
+
+  enerji_hackeri:
+    display_name: "Enerji Hackeri"
+    emoji: "⚡"
+    description: "Yenilenebilir enerji çözümleri ve enerji verimliliği projeleri."
+    color: "amber"
+    bonus_task_types:
+      - enerji
+      - verimlilik
+    bonus_multiplier: 1.30
+    stats:
+      guc: 8
+      cevre_puani: 7
+      analitik: 8
+      topluluk: 5
+    max_members: 6
+    unlocks_at_level: 1
+
+  iklim_muhendisi:
+    display_name: "İklim Mühendisi"
+    emoji: "🏗️"
+    description: "Sistem tasarımı, altyapı adaptasyonu ve kentsel iklim çözümleri."
+    color: "blue"
+    bonus_task_types:
+      - altyapi
+      - kentsel
+    bonus_multiplier: 1.30
+    stats:
+      guc: 9
+      cevre_puani: 6
+      analitik: 7
+      topluluk: 6
+    max_members: 6
+    unlocks_at_level: 1
+
+  toprak_analisti:
+    display_name: "Toprak Analisti"
+    emoji: "🌱"
+    description: "Toprak sağlığı, tarım ekosistemi ve gıda sistemleri sürdürülebilirliği."
+    color: "coral"
+    bonus_task_types:
+      - tarim
+      - toprak
+    bonus_multiplier: 1.30
+    stats:
+      guc: 6
+      cevre_puani: 8
+      analitik: 7
+      topluluk: 8
+    max_members: 6
+    unlocks_at_level: 1
+
+  veri_izci:
+    display_name: "Veri İzci"
+    emoji: "🔭"
+    description: "Çevre verisi toplama, analiz ve görselleştirme."
+    color: "purple"
+    bonus_task_types:
+      - analitik
+      - veri
+    bonus_multiplier: 1.30
+    stats:
+      guc: 5
+      cevre_puani: 7
+      analitik: 10
+      topluluk: 6
+    max_members: 6
+    unlocks_at_level: 1
+
+# ─── Seviye sistemi ───────────────────────────
+leveling:
+  xp_per_level: 400             # Her seviye için gereken XP
+  max_level: 20
+  level_rewards:                # Belirli seviyelerde bonus XP ödülü
+    5: 200
+    10: 500
+    15: 1000
+    20: 2500

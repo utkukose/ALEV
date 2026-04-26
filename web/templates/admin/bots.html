@@ -1,0 +1,232 @@
+{% extends "shared/admin_base.html" %}
+{% block title %}Botlar — Admin{% endblock %}
+{% block tbar_title %}Telegram Bot{% endblock %}
+
+{% block breadcrumb %}
+<a href="/admin" class="bc-link">{{ t.admin.events }}</a>
+<span class="bc-sep">›</span>
+<span class="bc-current">Botlar</span>
+{% endblock %}
+
+{% block sidebar %}
+<div class="sbsec">Bot</div>
+<button type="button" class="sblink on" onclick="showSec('bots',this)"><span class="sbico">🤖</span>Bot Yönetimi</button>
+<button type="button" class="sblink" onclick="showSec('guide',this)"><span class="sbico">📋</span>Kurulum Rehberi</button>
+<div class="sbsec">{{ t.admin.title }}</div>
+<a class="sblink" href="/admin"><span class="sbico">←</span>{{ t.admin.events }}</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.bot-card{background:var(--bg2);border:1.5px solid var(--b1);border-radius:14px;padding:1.25rem;margin-bottom:.85rem}
+.bot-card.online{border-top:3px solid var(--ok)}
+.led{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block}
+.led.on{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.led.off{background:var(--er)}
+.info-row{display:flex;align-items:center;gap:.5rem;padding:.4rem .75rem;border-bottom:1px solid var(--b1);font-size:.84rem}
+.info-row:last-child{border-bottom:none}
+.info-lbl{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--mu);min-width:140px}
+.info-val{color:var(--so);font-family:'DM Mono',monospace;font-size:.8rem;word-break:break-all}
+.guide-step{display:flex;gap:.75rem;padding:.85rem;background:var(--bg3);border-radius:10px;margin-bottom:.5rem}
+.guide-num{width:28px;height:28px;border-radius:50%;background:var(--ac);color:#0d0e0f;font-weight:800;font-size:.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem}
+.guide-text{font-size:.83rem;color:var(--di);line-height:1.6}
+.guide-text code{background:var(--bg4);padding:.1rem .35rem;border-radius:4px;font-family:'DM Mono',monospace;color:var(--ac)}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ BOT YÖNETİMİ ═══ -->
+<div id="sec-bots" class="sec on">
+  <div class="fxc jb mb3">
+    <div>
+      <h1 style="font-size:1.35rem;font-weight:800;color:var(--wh)">🤖 Telegram Bot</h1>
+      <div style="font-size:.78rem;color:var(--mu);font-family:'DM Mono',monospace">
+        {% if lang=='tr' %}Botu etkinliğinize bağlayın{% else %}Connect bot to your event{% endif %}
+      </div>
+    </div>
+    {% if not tokens %}
+    <button type="button" class="btn bp bsm" onclick="openModal('add-bot-modal')">+ Bot Ekle</button>
+    {% else %}
+    <button type="button" class="btn bg_ bsm" onclick="openModal('add-bot-modal')">+ Yeni Bot</button>
+    {% endif %}
+  </div>
+
+  {% if not tokens %}
+  <div class="infobox" style="margin-bottom:1.5rem">
+    {% if lang=='tr' %}Henüz bot eklenmemiş. @BotFather'dan token alın ve ekleyin.{% else %}No bots added yet. Get a token from @BotFather and add it.{% endif %}
+  </div>
+  {% endif %}
+
+  {% for tk in tokens %}
+  <div class="bot-card {% if tk.bot_username %}online{% endif %}" id="bot-{{ tk.group_id }}">
+    <div class="fxc jb mb2">
+      <div class="fxc gap">
+        <span class="led {% if tk.bot_username %}on{% else %}off{% endif %}"></span>
+        <div>
+          <div style="font-weight:800;color:var(--wh);font-size:1rem">
+            {% if tk.bot_username %}@{{ tk.bot_username }}{% else %}{{ tk.group_id }}{% endif %}
+          </div>
+          <div style="font-size:.7rem;font-family:'DM Mono',monospace;color:var(--mu)">ID: {{ tk.group_id }}</div>
+        </div>
+      </div>
+      <div class="fxc gap">
+        <button type="button" class="btn bg_ bsm" onclick="checkWebhook('{{ tk.group_id }}')">🔍 Webhook</button>
+        <button type="button" class="btn ber_ bxs" onclick="delBot('{{ tk.group_id }}')">✕</button>
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:10px;overflow:hidden;border:1px solid var(--b1)">
+      <div class="info-row"><span class="info-lbl">Bot ID</span><span class="info-val">{{ tk.bot_id or '—' }}</span></div>
+      <div class="info-row">
+        <span class="info-lbl">Etkinlik</span>
+        <span class="info-val">{% if tk.event_id %}{% for ev in events %}{% if ev.id == tk.event_id %}{{ ev.name }}{% endif %}{% endfor %}{% else %}—{% endif %}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-lbl">Webhook</span>
+        <span class="info-val" id="wh-{{ tk.group_id }}" style="color:var(--mu)">→ Kontrol et</span>
+      </div>
+      <div class="info-row">
+        <span class="info-lbl">Endpoint</span>
+        <span class="info-val" style="color:var(--in)">/webhook/{{ tk.group_id }}</span>
+      </div>
+    </div>
+    <!-- Webhook kurulum kutusu -->
+    <div style="margin-top:.85rem">
+      <div style="font-size:.72rem;font-weight:700;color:var(--mu);font-family:'DM Mono',monospace;margin-bottom:.4rem">WEBHOOK KURULUM</div>
+      <div style="font-size:.8rem;color:var(--di);margin-bottom:.4rem">
+        1. Terminalde: <code style="font-family:'DM Mono';background:var(--bg4);padding:.1rem .3rem;border-radius:4px;color:var(--ac)">ngrok http 8000</code>
+      </div>
+      <div style="font-size:.8rem;color:var(--di);margin-bottom:.5rem">2. Çıkan HTTPS URL'yi girin:</div>
+      <div style="display:flex;gap:.4rem">
+        <input class="fi" id="ngrok-{{ tk.group_id }}" placeholder="https://xxxx.ngrok-free.app"
+               style="font-family:'DM Mono',monospace;font-size:.78rem;flex:1">
+        <button type="button" class="btn bp bsm" onclick="setWebhook('{{ tk.group_id }}')">Kur</button>
+      </div>
+      <div style="font-size:.75rem;color:var(--mu);margin-top:.3rem">
+        Gerçek sunucuya taşıyınca ngrok URL yerine sunucu URL'nizi girin.
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ═══ KURULUM REHBERİ ═══ -->
+<div id="sec-guide" class="sec">
+  <h1 style="font-size:1.35rem;font-weight:800;color:var(--wh);margin-bottom:1.5rem">📋 Kurulum Rehberi</h1>
+  <div class="guide-step"><div class="guide-num">1</div><div><div style="font-weight:700;color:var(--wh);margin-bottom:.3rem">Bot Oluştur</div><div class="guide-text">Telegram'da <code>@BotFather</code>'a yazın → <code>/newbot</code> → ad ve kullanıcı adı belirleyin → token'ı kopyalayın.</div></div></div>
+  <div class="guide-step"><div class="guide-num">2</div><div><div style="font-weight:700;color:var(--wh);margin-bottom:.3rem">ALEV'e Ekle</div><div class="guide-text">"+ Bot Ekle" butonuna tıklayın, token ve etkinliği girin.</div></div></div>
+  <div class="guide-step"><div class="guide-num">3</div><div><div style="font-weight:700;color:var(--wh);margin-bottom:.3rem">Ngrok ile Dışarı Aç</div><div class="guide-text"><code>ngrok http 8000</code> → çıkan HTTPS URL'yi kopyalayın.</div></div></div>
+  <div class="guide-step"><div class="guide-num">4</div><div><div style="font-weight:700;color:var(--wh);margin-bottom:.3rem">Webhook Kur</div><div class="guide-text">Bot kartındaki webhook kutusuna URL'yi yapıştırın → "Kur" butonuna basın.</div></div></div>
+  <div class="guide-step"><div class="guide-num">5</div><div><div style="font-weight:700;color:var(--wh);margin-bottom:.3rem">Gruplara Ekle</div><div class="guide-text">Botu her takım Telegram grubuna <strong>admin</strong> olarak ekleyin. Grup ID için gruba <code>@userinfobot</code> ekleyin.</div></div></div>
+  <div class="guide-step"><div class="guide-num">6</div><div><div style="font-weight:700;color:var(--wh);margin-bottom:.3rem">Test</div><div class="guide-text">Telegram grubunda <code>/start</code> yazın. Yanıt gelirse kurulum tamamdır!</div></div></div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="ctitle" style="margin-bottom:.75rem">Bot Komutları</div>
+    <table style="width:100%;border-collapse:collapse">
+      {% for cmd,desc in [('/start','Hoş geldin & durum'),('/join KOD','Takıma katıl'),('/scenarios','Senaryo listesi'),('/tasks','Görev listesi'),('/submit ID LINK','Görev gönder'),('/profile','Profil & XP'),('/scores','Liderlik tablosu'),('/rol [NUM]','Rol seç'),('/help','Komut listesi')] %}
+      <tr style="border-bottom:1px solid var(--b1)">
+        <td style="padding:.4rem .5rem;font-family:'DM Mono',monospace;color:var(--ac);font-size:.82rem;width:160px">{{ cmd }}</td>
+        <td style="padding:.4rem .5rem;font-size:.82rem;color:var(--di)">{{ desc }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+
+<!-- Bot Ekle Modal -->
+<div class="mbg" id="add-bot-modal">
+<div class="modal" style="max-width:480px">
+  <div class="mtitle">🤖 Bot Ekle</div>
+  <div class="fg">
+    <label class="fl">Bot Token *</label>
+    <input class="fi" id="ab-token" type="password" placeholder="7234567890:AAF_abc123..."
+           style="font-family:'DM Mono',monospace">
+    <div class="fh">@BotFather'dan aldığınız token</div>
+  </div>
+  <div class="fg">
+    <label class="fl">HTTPS URL (Webhook)</label>
+    <input class="fi" id="ab-url" placeholder="https://xxxx.ngrok-free.app"
+           style="font-family:'DM Mono',monospace">
+    <div class="fh">ngrok http 8000 çalıştırın, çıkan URL'yi yapıştırın. Boş bırakılabilir.</div>
+  </div>
+  <div class="fg">
+    <label class="fl">Etkinlik</label>
+    <select class="fs" id="ab-event">
+      <option value="">— Seç —</option>
+      {% for ev in events %}<option value="{{ ev.id }}">{{ ev.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div id="ab-err" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:.6rem .85rem;color:var(--er);font-size:.85rem;margin-bottom:.75rem"></div>
+  <div id="ab-ok" style="display:none;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:8px;padding:.6rem .85rem;color:var(--ok);font-size:.85rem;margin-bottom:.75rem"></div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('add-bot-modal')">İptal</button>
+    <button type="button" class="btn bp bsm" id="ab-btn" onclick="addBot()">Kaydet & Webhook Kur</button>
+  </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var LNG=document.documentElement.getAttribute('lang')||'tr';
+
+async function addBot(){
+  var tok=document.getElementById('ab-token').value.trim();
+  var url=document.getElementById('ab-url').value.trim().replace(/\/$/,'');
+  var evid=document.getElementById('ab-event').value;
+  var errEl=document.getElementById('ab-err');
+  var okEl=document.getElementById('ab-ok');
+  var btn=document.getElementById('ab-btn');
+  errEl.style.display='none'; okEl.style.display='none';
+  if(!tok){errEl.textContent='Token gerekli';errEl.style.display='block';return}
+  btn.disabled=true;btn.textContent='İşleniyor...';
+  var r=await apiFetch('POST','/api/bot/auto-setup',{
+    token:tok,group_id:'main',
+    event_id:evid?parseInt(evid):null,
+    webhook_base:url
+  });
+  btn.disabled=false;btn.textContent='Kaydet & Webhook Kur';
+  if(r&&r.ok){
+    var msg='@'+r.bot_username+' eklendi.';
+    if(r.webhook_set) msg+=' Webhook kuruldu: '+r.webhook_url;
+    else if(url) msg+=' Webhook kurulamadı: '+(r.webhook_error||'');
+    else msg+=' Webhook girilmedi.';
+    okEl.textContent=msg;okEl.style.display='block';
+    setTimeout(function(){location.reload()},2000);
+  } else {
+    errEl.textContent=(r&&r.error)||'Hata';
+    errEl.style.display='block';
+  }
+}
+
+async function setWebhook(gid){
+  var urlEl=document.getElementById('ngrok-'+gid);
+  var ngUrl=urlEl?urlEl.value.trim().replace(/\/$/,''):'';
+  if(!ngUrl){toast('URL gerekli','e');return}
+  var webhookUrl=ngUrl+'/webhook/'+gid;
+  var r=await apiFetch('POST','/api/bot/'+gid+'/set-webhook',{webhook_url:webhookUrl});
+  if(r&&r.ok){
+    toast('Webhook kuruldu!','s');
+    document.getElementById('wh-'+gid).innerHTML='<span style="color:var(--ok)">✓ '+webhookUrl+'</span>';
+  } else toast((r&&r.error)||'Hata','e');
+}
+
+async function checkWebhook(gid){
+  var el=document.getElementById('wh-'+gid);
+  el.textContent='...';
+  var r=await apiFetch('GET','/api/bot/'+gid+'/status');
+  if(r&&r.webhook_url&&r.webhook_url.length>0){
+    el.innerHTML='<span style="color:var(--ok)">✓ '+r.webhook_url+'</span>';
+  } else {
+    el.innerHTML='<span style="color:var(--er)">✗ Webhook kurulmamış</span>';
+  }
+}
+
+async function delBot(gid){
+  if(!confirm('Bot silinsin mi?'))return;
+  var r=await apiFetch('DELETE','/api/bot/'+gid);
+  if(r&&r.ok){toast('Silindi','s');document.getElementById('bot-'+gid).remove()}
+}
+</script>
+{% endblock %}

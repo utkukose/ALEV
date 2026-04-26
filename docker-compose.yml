@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       alev
+      POSTGRES_USER:     alev
+      POSTGRES_PASSWORD: alev_secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL:      postgresql://alev:alev_secret@db:5432/alev
+      ADMIN_USERNAME:    ${ADMIN_USERNAME:?ADMIN_USERNAME env degiskeni .env dosyasinda tanimlanmali}
+      ADMIN_PASSWORD:    ${ADMIN_PASSWORD:?ADMIN_PASSWORD env degiskeni .env dosyasinda tanimlanmali}
+      SECRET_KEY:        ${SECRET_KEY:?SECRET_KEY env degiskeni .env dosyasinda tanimlanmali}
+      ALEV_CONFIG_DIR:   /app/config
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:-}
+      INTERNAL_SECRET:      ${INTERNAL_SECRET:-}
+    volumes:
+      - ./web/templates:/app/web/templates:ro
+      - ./web/static:/app/web/static:ro
+      - ./core:/app/core:ro
+      - ./web/api:/app/web/api:ro
+      - ./web/app.py:/app/web/app.py:ro
+      - ./web/i18n.py:/app/web/i18n.py:ro
+      - ./config:/app/config:ro
+
+  bot:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "bot_runner.py"]
+    environment:
+      DATABASE_URL:      postgresql://alev:alev_secret@db:5432/alev
+      ALEV_CONFIG_DIR:   /app/config
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:-}
+      INTERNAL_SECRET:      ${INTERNAL_SECRET:-}
+      ALEV_BOT_TOKEN:    ${ALEV_BOT_TOKEN:-}
+      ADMIN_IDS:         ${ADMIN_IDS:-0}
+    volumes:
+      - ./config:/app/config:ro
+
+volumes:
+  pgdata:

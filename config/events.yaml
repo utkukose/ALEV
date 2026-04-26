@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────────
+# ALEV — Etkinlik & Yarışma Takvimi
+# Tüm zamanlı olaylar buradan yönetilir.
+# ─────────────────────────────────────────────
+
+events:
+  - id: "acilis_seremonisi"
+    title: "Açılış Seremonisi"
+    type: duyuru                  # duyuru | yarışma | bonus_xp | duel_turu | ozel_gorev
+    description: "ALEV etkinliği resmen başlıyor!"
+    scheduled_at: "2026-05-01T10:00:00"
+    duration_minutes: 120
+    announcement_channel: true    # Telegram grubuna duyurulsun mu?
+    xp_reward: 0
+
+  - id: "ilk_sprint"
+    title: "İlk Sprint — Su Haftası"
+    type: bonus_xp
+    description: >
+      Bu hafta su_kalitesi türündeki görevler
+      için ekstra %50 XP bonusu aktif.
+    scheduled_at: "2026-05-02T00:00:00"
+    duration_minutes: 10080       # 7 gün = 7*24*60
+    announcement_channel: true
+    bonus_task_type: su_kalitesi
+    bonus_multiplier: 1.50        # O hafta geçerli ek çarpan
+    xp_reward: 0
+
+  - id: "duel_turu_1"
+    title: "1. Düello Turu"
+    type: duel_turu
+    description: >
+      Takımlar kura ile eşleşir. Kazanan takıma
+      bonus XP, kaybedene teselli rozeti verilir.
+    scheduled_at: "2026-05-08T14:00:00"
+    duration_minutes: 180
+    announcement_channel: true
+    xp_reward: 100                # Katılım XP'si (kazanma bonusu ayrıca hesaplanır)
+
+  - id: "orta_degerlendirme"
+    title: "Ara Değerlendirme & Skor Açıklaması"
+    type: duyuru
+    description: "İlk 2 haftanın liderlik tablosu yayınlanır."
+    scheduled_at: "2026-05-15T18:00:00"
+    duration_minutes: 60
+    announcement_channel: true
+    xp_reward: 0
+
+  - id: "buyuk_final"
+    title: "Büyük Final — İklim Zirvesi"
+    type: yarışma
+    description: "Takımlar projelerini jüriye sunar. Puanlar sisteme girilir."
+    scheduled_at: "2026-05-22T10:00:00"
+    duration_minutes: 480
+    announcement_channel: true
+    xp_reward: 500                # Finale katılan herkese
+
+# ─── Otomatik duyuru zamanlaması ─────────────
+announcements:
+  remind_before_minutes: 60      # Etkinlikten 60 dk önce hatırlatma gönder
+  timezone: "Europe/Istanbul"

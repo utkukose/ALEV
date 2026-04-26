@@ -1,0 +1,378 @@
+{% extends "shared/admin_base.html" %}
+{% block title %}{{ brand.name }} — Dashboard{% endblock %}
+{% block topbar_title %}{% if lang=='tr' %}Dashboard{% else %}Dashboard{% endif %}{% endblock %}
+
+{% block sec_titles %}
+{
+  "dashboard": "{% if lang=='tr' %}Genel Bakış{% else %}Overview{% endif %}",
+  "approvals": "{% if lang=='tr' %}Onaylar{% else %}Approvals{% endif %}",
+  "scenario":  "{% if lang=='tr' %}Senaryo{% else %}Scenario{% endif %}",
+  "duel":      "{% if lang=='tr' %}Düello & BP{% else %}Duel & SP{% endif %}",
+  "announce":  "{% if lang=='tr' %}Duyuru{% else %}Announce{% endif %}"
+}
+{% endblock %}
+
+{% block sidebar %}
+<div class="sbsec">{% if lang=='tr' %}Genel{% else %}General{% endif %}</div>
+<button class="sblink on" onclick="showSec('dashboard',this)">
+  <span class="sbico">⬡</span>
+  {% if lang=='tr' %}Genel Bakış{% else %}Overview{% endif %}
+</button>
+<button class="sblink" onclick="showSec('approvals',this)">
+  <span class="sbico">✓</span>
+  {% if lang=='tr' %}Onaylar{% else %}Approvals{% endif %}
+  <span class="sb-badge" id="pending-badge">{{ bekleyenler|length }}</span>
+</button>
+
+<div class="sbsec">{% if lang=='tr' %}Yarışma{% else %}Competition{% endif %}</div>
+<button class="sblink" onclick="showSec('scenario',this)">
+  <span class="sbico">◈</span>{% if lang=='tr' %}Senaryo{% else %}Scenario{% endif %}
+</button>
+<button class="sblink" onclick="showSec('duel',this)">
+  <span class="sbico">⚔</span>{% if lang=='tr' %}Düello & BP{% else %}Duel & SP{% endif %}
+</button>
+<button class="sblink" onclick="showSec('announce',this)">
+  <span class="sbico">◉</span>{% if lang=='tr' %}Duyuru{% else %}Announce{% endif %}
+</button>
+
+<div class="sbsec">{% if lang=='tr' %}Yönetim{% else %}Management{% endif %}</div>
+<a class="sblink" href="/admin/yaml_editor">
+  <span class="sbico">◧</span>{% if lang=='tr' %}İçerik{% else %}Content{% endif %}
+</a>
+<a class="sblink" href="/admin/bot_manager">
+  <span class="sbico">◎</span>{% if lang=='tr' %}Botlar{% else %}Bots{% endif %}
+</a>
+<a class="sblink" href="/jury">
+  <span class="sbico">⚖</span>{% if lang=='tr' %}Jüri{% else %}Jury{% endif %}
+</a>
+<a class="sblink" href="/leaderboard">
+  <span class="sbico">◑</span>{% if lang=='tr' %}Liderlik{% else %}Leaderboard{% endif %}
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- ════ GENEL BAKIŞ ════ -->
+<div id="sec-dashboard" class="sec on">
+  <div class="srow" id="stat-chips">
+    <div class="card">
+      <div class="ctitle">{% if lang=='tr' %}Takımlar{% else %}Teams{% endif %}</div>
+      <div class="card-value" id="stat-teams">{{ takimlar|length }}</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">{% if lang=='tr' %}Bekleyen{% else %}Pending{% endif %}</div>
+      <div class="card-value" id="stat-pending" style="color:var(--amber)">{{ bekleyenler|length }}</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Top BP</div>
+      <div class="card-value" id="stat-top-xp">{{ "{:,}".format(takimlar[0].xp) if takimlar else 0 }}</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">{% if lang=='tr' %}Senaryo{% else %}Scenario{% endif %}</div>
+      <div class="card-value" id="stat-scenario" style="font-size:1rem;padding-top:.4rem">—</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="card-title mb-2">{% if lang=='tr' %}Liderlik Tablosu{% else %}Leaderboard{% endif %}</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="mini-lb">
+          {% for t in takimlar[:8] %}
+          <div style="display:flex;align-items:center;gap:.75rem;padding:.62rem 1rem;border-bottom:1px solid var(--wire)">
+            <span style="font-family:'DM Mono',monospace;color:var(--mute);font-size:.7rem;width:18px">{{ loop.index }}</span>
+            <span style="flex:1;color:var(--white);font-weight:600;font-size:.85rem">{{ t.ad }}</span>
+            <span style="font-family:'DM Mono',monospace;color:var(--amber);font-size:.78rem">{{ "{:,}".format(t.xp) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card-title mb-2">{% if lang=='tr' %}Aktif Gruplar{% else %}Active Groups{% endif %}</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        {% for g in groups %}
+        <div class="card" style="padding:.85rem;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:600;color:var(--white);font-size:.85rem">{{ g.name }}</div>
+            <div style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--mute)">{{ g.task_set }}</div>
+          </div>
+          <span class="badge bok">{% if lang=='tr' %}Aktif{% else %}Active{% endif %}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ONAYLAR ════ -->
+<div id="sec-approvals" class="sec">
+  <div class="flex justify-between flex-center mb-3">
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <div class="ctitle" style="margin:0">{% if lang=='tr' %}Bekleyen Onaylar{% else %}Pending Approvals{% endif %}</div>
+      <div class="help-tip">
+        <span class="help-badge">?</span>
+        <div class="tip-box">{% if lang=='tr' %}Katılımcıların görev tamamlama istekleri burada birikte. Kanıt linkini kontrol ederek onaylayın veya reddedin.{% else %}Participants' task completion requests queue here. Check the proof link before approving or rejecting.{% endif %}</div>
+      </div>
+    </div>
+    <button class="btn btn-g btn-sm" onclick="loadPending()">↻</button>
+  </div>
+  <div id="approvals-list">
+    {% for b in bekleyenler %}
+    <div class="card mb-2" id="ap-{{ b.id }}" style="border-left:2px solid var(--amber)">
+      <div class="flex justify-between flex-center mb-2">
+        <div>
+          <div style="font-weight:700;color:var(--white);font-size:.88rem">{{ b.gorev_id }}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--mute)">
+            {% if lang=='tr' %}Takım{% else %}Team{% endif %}: {{ b.takim_id }}
+          </div>
+        </div>
+        <span class="badge ba">{% if lang=='tr' %}Bekliyor{% else %}Pending{% endif %}</span>
+      </div>
+      {% if b.kanit %}
+      <div style="font-family:'DM Mono',monospace;font-size:.74rem;color:var(--dim);background:var(--ink-4);padding:.5rem .75rem;border-radius:6px;margin-bottom:.65rem;word-break:break-all">{{ b.kanit }}</div>
+      {% endif %}
+      <div style="display:flex;gap:.4rem">
+        <button class="btn btn-ok btn-sm" onclick="decide({{ b.id }},'onayla')">
+          ✓ {% if lang=='tr' %}Onayla{% else %}Approve{% endif %}
+        </button>
+        <button class="btn btn-d btn-sm" onclick="decide({{ b.id }},'reddet')">
+          ✗ {% if lang=='tr' %}Reddet{% else %}Reject{% endif %}
+        </button>
+      </div>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--mute);font-family:'DM Mono',monospace;font-size:.8rem">
+      {% if lang=='tr' %}Bekleyen onay yok{% else %}No pending approvals{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ════ SENARYO ════ -->
+<div id="sec-scenario" class="sec">
+  <div class="g2">
+    <div class="cacc">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.9rem">
+      <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--mute);font-family:'DM Mono',monospace">{% if lang=='tr' %}Aktif Senaryo{% else %}Active Scenario{% endif %}</div>
+      <div class="help-tip">
+        <span class="help-badge">?</span>
+        <div class="tip-box">{% if lang=='tr' %}Senaryo başlatınca BP çarpanları devreye girer ve aşamaya göre farklı görevler açılır. Senaryo ilerletmek için "İlerle" butonunu kullanın.{% else %}Starting a scenario activates BP multipliers and unlocks stage-specific tasks. Use "Advance" to progress stages.{% endif %}</div>
+      </div>
+    </div>
+      <div id="scenario-status" style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--mute);margin-bottom:1rem">
+        {% if lang=='tr' %}Yükleniyor...{% else %}Loading...{% endif %}
+      </div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Senaryo Seç{% else %}Select Scenario{% endif %}</label>
+        <select class="fs" id="scenario-select">
+          {% for sc in cfg.scenarios %}
+          <option value="{{ sc.id }}" {% if sc.active %}selected{% endif %}>
+            {{ sc.name }} ({{ sc.stages|length }} {% if lang=='tr' %}aşama{% else %}stages{% endif %})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn btn-ok btn-sm" onclick="startScenario()">
+          ▶ {% if lang=='tr' %}Başlat{% else %}Start{% endif %}
+        </button>
+        <button class="btn btn-p btn-sm" onclick="advanceStage()">
+          ⏭ {% if lang=='tr' %}İlerle{% else %}Advance{% endif %}
+        </button>
+        <button class="btn btn-d btn-sm" onclick="stopScenario()">
+          ■ {% if lang=='tr' %}Durdur{% else %}Stop{% endif %}
+        </button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">{% if lang=='tr' %}Aşama Planı{% else %}Stage Plan{% endif %}</div>
+      {% for sc in cfg.scenarios %}
+      <div style="margin-bottom:.75rem">
+        <div style="font-size:.7rem;color:var(--amber);font-family:'DM Mono',monospace;margin-bottom:.35rem">{{ sc.name }}</div>
+        {% for stage in sc.stages %}
+        <div id="stage-{{ sc.id }}-{{ stage.id }}"
+             style="display:flex;align-items:center;gap:.65rem;padding:.5rem .75rem;background:var(--ink-3);border:1px solid var(--wire);border-radius:6px;margin-bottom:.3rem">
+          <span style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--mute);width:16px">{{ stage.order }}</span>
+          <span style="flex:1;font-weight:600;color:var(--white);font-size:.82rem">{{ stage.name }}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--amber)">{{ stage.xp_multiplier }}x</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ════ DÜELLO & BP ════ -->
+<div id="sec-duel" class="sec">
+  <div class="g2">
+    <div class="cacc">
+      <div class="ctitle">{% if lang=='tr' %}Düello Başlat{% else %}Start Duel{% endif %}</div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Meydan Okuyan{% else %}Challenger{% endif %}</label>
+        <select class="fs" id="duel-c">
+          {% for t in takimlar %}
+          <option value="{{ t.id }}">{{ t.ad }} ({{ "{:,}".format(t.xp) }} BP)</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Rakip{% else %}Defender{% endif %}</label>
+        <select class="fs" id="duel-d">
+          {% for t in takimlar %}
+          <option value="{{ t.id }}">{{ t.ad }} ({{ "{:,}".format(t.xp) }} BP)</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-p" onclick="startDuel()">
+        ⚔ {% if lang=='tr' %}Başlat{% else %}Start{% endif %}
+      </button>
+      <div id="duel-result" style="display:none;margin-top:1rem;padding:.75rem;background:var(--ink-3);border-radius:8px;font-family:'DM Mono',monospace;font-size:.82rem"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">{% if lang=='tr' %}BP Düzenleme{% else %}SP Adjustment{% endif %}</div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Takım{% else %}Team{% endif %}</label>
+        <select class="fs" id="xp-team">{% for t in takimlar %}<option value="{{ t.id }}">{{ t.ad }}</option>{% endfor %}</select>
+      </div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Miktar{% else %}Amount{% endif %}</label>
+        <input class="fi" type="number" id="xp-amount" placeholder="{% if lang=='tr' %}BP miktarı{% else %}SP amount{% endif %}">
+      </div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Sebep{% else %}Reason{% endif %}</label>
+        <input class="fi" id="xp-reason" placeholder="{% if lang=='tr' %}Admin düzenlemesi{% else %}Admin adjustment{% endif %}">
+      </div>
+      <button class="btn btn-p btn-sm" onclick="addXP()">
+        {% if lang=='tr' %}BP Ekle{% else %}Add SP{% endif %}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ DUYURU ════ -->
+<div id="sec-announce" class="sec">
+  <div class="cacc" style="max-width:520px">
+    <div class="ctitle">{% if lang=='tr' %}Tüm Gruplara Duyuru{% else %}Announce to All Groups{% endif %}</div>
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Başlık{% else %}Title{% endif %}</label>
+      <input class="fi" id="ann-title" placeholder="{% if lang=='tr' %}Duyuru başlığı{% else %}Announcement title{% endif %}">
+    </div>
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Mesaj{% else %}Message{% endif %}</label>
+      <textarea class="ft" id="ann-msg" rows="4" placeholder="{% if lang=='tr' %}Mesaj metni...{% else %}Message text...{% endif %}"></textarea>
+    </div>
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Tür{% else %}Type{% endif %}</label>
+      <select class="fs" id="ann-type">
+        <option value="info">{% if lang=='tr' %}Bilgi{% else %}Info{% endif %}</option>
+        <option value="success">{% if lang=='tr' %}Başarı{% else %}Success{% endif %}</option>
+        <option value="duel">{% if lang=='tr' %}Önemli{% else %}Important{% endif %}</option>
+        <option value="danger">{% if lang=='tr' %}Uyarı{% else %}Warning{% endif %}</option>
+      </select>
+    </div>
+    <button class="btn btn-p" onclick="sendAnnounce()">
+      ◉ {% if lang=='tr' %}Gönder{% else %}Send{% endif %}
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const L=document.documentElement.getAttribute('lang')||'tr';
+
+// Pending badge
+const pc={{ bekleyenler|length }};
+if(pc>0){const b=document.getElementById('pending-badge');if(b){b.textContent=pc;b.style.display='inline'}}
+
+async function decide(id,action){
+  const r=await fetch(`/admin/onay/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+  const d=await r.json();
+  if(d.ok){document.getElementById(`ap-${id}`)?.remove();toast(action==='onayla'?'✓ '+(L==='tr'?'Onaylandı':'Approved'):'✗ '+(L==='tr'?'Reddedildi':'Rejected'),action==='onayla'?'s':'e')}
+}
+
+async function startDuel(){
+  const c=document.getElementById('duel-c').value;
+  const d=document.getElementById('duel-d').value;
+  if(c===d){toast(L==='tr'?'Farklı iki takım seçin':'Select two different teams','e');return}
+  const r=await fetch('/admin/duel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({challenger_id:+c,defender_id:+d})});
+  const data=await r.json();
+  if(data.ok){
+    const el=document.getElementById('duel-result');
+    el.style.display='block';
+    el.innerHTML=`🏆 <span style="color:var(--amber)">${data.winner}</span> ${L==='tr'?'kazandı':'wins'}`;
+    toast(`⚔ ${data.winner}`,'w');
+  }
+}
+
+async function addXP(){
+  const tid=document.getElementById('xp-team').value;
+  const m=parseInt(document.getElementById('xp-amount').value)||0;
+  const s=document.getElementById('xp-reason').value||'Admin';
+  if(!m){toast(L==='tr'?'Miktar girin':'Enter amount','e');return}
+  await fetch('/admin/xp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({takim_id:+tid,miktar:m,sebep:s})});
+  toast(`${m>0?'+':''}${m} BP`,'s');
+}
+
+async function sendAnnounce(){
+  const t=document.getElementById('ann-title').value;
+  const m=document.getElementById('ann-msg').value;
+  const ty=document.getElementById('ann-type').value;
+  if(!m){toast(L==='tr'?'Mesaj girin':'Enter message','e');return}
+  await fetch('/admin/announce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:t,message:m,type:ty})});
+  toast(L==='tr'?'Duyuru gönderildi':'Announced','s');
+}
+
+async function startScenario(){
+  const sid=document.getElementById('scenario-select').value;
+  const r=await fetch('/admin/scenario/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario_id:sid})});
+  const d=await r.json();
+  if(d.ok){toast(`▶ ${d.stage}`,'s');loadScenarioStatus()}
+}
+async function advanceStage(){
+  const r=await fetch('/admin/scenario/advance',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  const d=await r.json();
+  toast(d.is_final?'🏁':'⏭ '+d.announcement,d.is_final?'s':'w');
+  loadScenarioStatus();
+}
+async function stopScenario(){
+  if(!confirm(L==='tr'?'Durdur?':'Stop?'))return;
+  await fetch('/admin/scenario/stop',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  toast(L==='tr'?'Durduruldu':'Stopped','e');
+  loadScenarioStatus();
+}
+async function loadScenarioStatus(){
+  const d=await fetch('/api/scenario/status').then(r=>r.json());
+  const el=document.getElementById('scenario-status');
+  const sv=document.getElementById('stat-scenario');
+  if(d.active){
+    el.innerHTML=`<span style="color:var(--ok)">●</span> ${d.scenario_name} → <span style="color:var(--amber)">${d.stage_name}</span> <span style="color:var(--mute)">(${d.xp_multiplier}x)</span>`;
+    if(sv) sv.textContent=d.stage_name.substring(0,18);
+    document.querySelectorAll('[id^="stage-"]').forEach(s=>s.style.borderColor='var(--wire)');
+    const active=document.getElementById(`stage-${d.scenario_id}-${d.stage_id}`);
+    if(active) active.style.borderColor='var(--amber)';
+  } else {
+    el.innerHTML=`<span style="color:var(--mute)">○ ${L==='tr'?'Aktif senaryo yok':'No active scenario'}</span>`;
+    if(sv) sv.textContent='—';
+  }
+}
+loadScenarioStatus();
+setInterval(loadScenarioStatus,30000);
+
+function onLeaderboard(teams){
+  const el=document.getElementById('mini-lb');
+  if(!el)return;
+  el.innerHTML=teams.slice(0,8).map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.62rem 1rem;border-bottom:1px solid var(--wire)">
+      <span style="font-family:'DM Mono',monospace;color:var(--mute);font-size:.7rem;width:18px">${i+1}</span>
+      <span style="flex:1;color:var(--white);font-weight:600;font-size:.85rem">${t.ad}</span>
+      <span style="font-family:'DM Mono',monospace;color:var(--amber);font-size:.78rem">${t.xp.toLocaleString()}</span>
+    </div>`).join('');
+  const st=document.getElementById('stat-teams');
+  if(st) st.textContent=teams.length;
+  const sx=document.getElementById('stat-top-xp');
+  if(sx) sx.textContent=teams[0]?.xp?.toLocaleString()||'0';
+}
+</script>
+{% endblock %}

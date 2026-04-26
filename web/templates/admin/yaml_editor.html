@@ -1,0 +1,1076 @@
+{% extends "shared/admin_base.html" %}
+{% block title %}{{ brand.name }} — {% if lang=='tr' %}İçerik Yönetimi{% else %}Content Manager{% endif %}{% endblock %}
+{% block topbar_title %}{% if lang=='tr' %}İçerik Yönetimi{% else %}Content Manager{% endif %}{% endblock %}
+
+{% block sidebar %}
+<div class="sbsec">{% if lang=='tr' %}İçerik{% else %}Content{% endif %}</div>
+<button class="sblink on" onclick="show('tasks',this)"><span class="sbico">◻</span>{% if lang=='tr' %}Görevler{% else %}Tasks{% endif %}</button>
+<button class="sblink" onclick="show('roles',this)"><span class="sbico">⚔</span>{% if lang=='tr' %}Roller{% else %}Roles{% endif %}</button>
+<div class="sbsec">{% if lang=='tr' %}Senaryo{% else %}Scenario{% endif %}</div>
+<button class="sblink" onclick="show('scenarios',this)"><span class="sbico">◈</span>{% if lang=='tr' %}Senaryolar{% else %}Scenarios{% endif %}</button>
+<button class="sblink" onclick="show('branching',this)"><span class="sbico">◑</span>{% if lang=='tr' %}Karar Ağacı{% else %}Decision Tree{% endif %}</button>
+<div class="sbsec">{% if lang=='tr' %}Etkinlik{% else %}Events{% endif %}</div>
+<button class="sblink" onclick="show('quizzes',this)"><span class="sbico">◉</span>{% if lang=='tr' %}Quizler{% else %}Quizzes{% endif %}</button>
+<button class="sblink" onclick="show('locations',this)"><span class="sbico">◎</span>{% if lang=='tr' %}Konum{% else %}Location{% endif %}</button>
+<div class="sbsec">{% if lang=='tr' %}Sistem{% else %}System{% endif %}</div>
+<button class="sblink" onclick="show('jury',this)"><span class="sbico">⚖</span>{% if lang=='tr' %}Jüri{% else %}Jury{% endif %}</button>
+<button class="sblink" onclick="show('groups',this)"><span class="sbico">◆</span>{% if lang=='tr' %}Gruplar{% else %}Groups{% endif %}</button>
+<div style="margin-top:auto;padding:.75rem 1.25rem">
+  <button class="btn btn-g btn-sm" style="width:100%;justify-content:center" onclick="forceReload()">
+    🔄 {% if lang=='tr' %}Yenile{% else %}Reload{% endif %}
+  </button>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+
+:root{
+  --g9:#173404;--g8:#27500A;--g7:#3B6D11;--g6:#639922;--g3:#C0DD97;--g1:#EAF3DE;
+  --t6:#0F6E56;--t1:#E1F5EE;--a6:#854F0B;--a1:#FAEEDA;
+  --r6:#993C1D;--r1:#FAECE7;--b6:#185FA5;--b1:#E6F1FB;
+  --gray-900:#1a1c1a;--gray-700:#374151;--gray-600:#4a4c4a;
+  --gray-400:#7a7c7a;--gray-200:#d4d6d4;--gray-100:#f0f2f0;--gray-50:#f8faf8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-900);min-height:100vh}
+h1,h2,h3{font-family:'Syne',sans-serif}
+
+/* Layout */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:var(--g9);padding:1.5rem 0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sb-brand{padding:0 1.25rem 1.25rem;font-size:1rem;font-weight:800;color:var(--g3);font-family:'Syne',sans-serif}
+.sb-section{padding:.4rem 1.25rem;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--g7);margin-top:.75rem}
+.sb-link{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.25rem;font-size:.84rem;color:var(--g3);opacity:.65;text-decoration:none;cursor:pointer;background:transparent;border:none;width:100%;text-align:left;transition:all .15s}
+.sb-link:hover,.sb-link.active{opacity:1;background:rgba(255,255,255,.08)}
+.sb-link .ico{font-size:.9rem;flex-shrink:0}
+.sb-bottom{margin-top:auto;padding:1rem 1.25rem}
+.main{flex:1;padding:2rem;overflow-x:hidden;max-width:calc(100vw - 220px)}
+.page-title{font-size:1.4rem;font-weight:800;color:var(--gray-900);margin-bottom:1.5rem}
+
+/* Sections */
+.section{display:none}.section.active{display:block}
+
+/* Cards */
+.card{background:#fff;border:1px solid var(--gray-200);border-radius:14px;padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:.9rem;font-weight:600;color:var(--gray-900);margin-bottom:1rem}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:.35rem;padding:.5rem 1rem;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Inter',sans-serif}
+.btn-green{background:var(--g7);color:#fff}.btn-green:hover{background:var(--g8)}
+.btn-red{background:#dc2626;color:#fff}.btn-red:hover{background:#b91c1c}
+.btn-amber{background:var(--a6);color:#fff}
+.btn-ghost{background:transparent;color:var(--gray-600);border:1px solid var(--gray-200)}.btn-ghost:hover{background:var(--gray-100)}
+.btn-blue{background:var(--b6);color:#fff}
+.btn-sm{padding:.3rem .7rem;font-size:.76rem}
+
+/* Forms */
+.form-row{display:grid;gap:.75rem;margin-bottom:.75rem}
+.form-row.cols-2{grid-template-columns:1fr 1fr}
+.form-row.cols-3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:.3rem}
+.form-label{font-size:.8rem;font-weight:500;color:var(--gray-700)}
+.form-input,.form-select,.form-textarea{padding:.55rem .8rem;border:1.5px solid var(--gray-200);border-radius:7px;font-size:.875rem;font-family:'Inter',sans-serif;color:var(--gray-900);background:#fff;transition:border-color .15s;width:100%}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--g6);box-shadow:0 0 0 3px rgba(99,153,34,.1)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-mono{font-family:'JetBrains Mono',monospace;font-size:.8rem;min-height:120px}
+.form-hint{font-size:.72rem;color:var(--gray-400);margin-top:.2rem}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{text-align:left;padding:.6rem .9rem;font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);border-bottom:1px solid var(--gray-200)}
+td{padding:.7rem .9rem;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+tr:hover td{background:var(--gray-50)}
+
+/* Badge */
+.badge{display:inline-flex;align-items:center;padding:.18rem .55rem;border-radius:20px;font-size:.7rem;font-weight:600}
+.bg{background:var(--g1);color:var(--g8)}.bt{background:var(--t1);color:var(--t6)}
+.ba{background:var(--a1);color:var(--a6)}.br{background:var(--r1);color:var(--r6)}
+.bgr{background:var(--gray-100);color:var(--gray-600)}
+
+/* Toggle */
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--gray-200);border-radius:20px;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--g6)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(16px)}
+
+/* Toast */
+.toast-wrap{position:fixed;top:1rem;right:1rem;z-index:999;display:flex;flex-direction:column;gap:.5rem}
+.toast{padding:.75rem 1.1rem;border-radius:10px;font-size:.84rem;font-weight:500;background:#fff;border-left:4px solid;box-shadow:0 4px 16px rgba(0,0,0,.1);animation:tIn .2s ease}
+@keyframes tIn{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
+.ts{border-color:var(--t6);color:var(--t6)}.te{border-color:#dc2626;color:#dc2626}.ti{border-color:var(--b6);color:var(--b6)}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:1.75rem;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.2)}
+.modal-title{font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;font-family:'Syne',sans-serif}
+.modal-footer{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--gray-100)}
+
+/* Map */
+#loc-map{width:100%;height:320px;border-radius:10px;border:1px solid var(--gray-200);margin-bottom:.75rem}
+
+/* Stat */
+.stat-row{display:flex;gap:8px;margin-bottom:1.25rem}
+.stat{flex:1;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:10px;padding:.75rem;text-align:center}
+.stat-num{font-size:1.5rem;font-weight:800;color:var(--g8);font-family:'Syne',sans-serif}
+.stat-label{font-size:.7rem;color:var(--gray-400);margin-top:.15rem}
+
+/* Node tree */
+.node-card{border:1px solid var(--gray-200);border-radius:10px;padding:.85rem;margin-bottom:.5rem;background:var(--gray-50)}
+.node-card.type-choice{border-left:3px solid var(--b6)}
+.node-card.type-task_set{border-left:3px solid var(--g6)}
+.node-card.type-end{border-left:3px solid var(--gray-400)}
+
+[data-theme="light"] {
+  --g9:#f8f9fa;--g8:#0d0e0f;--g7:#495057;--g6:#343a40;--g3:#495057;--g1:#f1f3f5;
+  --t6:#047857;--t1:#ecfdf5;--a6:#b45309;--a1:#fffbeb;
+  --r6:#991b1b;--r1:#fef2f2;--b6:#1d4ed8;--b1:#eff6ff;
+  --gray-900:#0d0e0f;--gray-700:#374151;--gray-600:#4b5563;
+  --gray-400:#9ca3af;--gray-200:#e5e7eb;--gray-100:#f3f4f6;--gray-50:#f9fafb;
+}
+[data-theme="light"] .sidebar { background: #f1f3f5; }
+[data-theme="light"] .card { background: #ffffff; border-color: #e5e7eb; }
+[data-theme="light"] .fi, [data-theme="light"] .fs, [data-theme="light"] .ft {
+  background: #f9fafb; color: #0d0e0f; border-color: #d1d5db;
+}
+[data-theme="light"] body { background: #f8f9fa; color: #343a40; }
+
+/* Konum haritası */
+#loc-map{width:100%;height:280px;border-radius:8px;border:1px solid var(--wire);margin-bottom:.75rem}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="toast-wrap" id="toasts"></div>
+
+
+
+<main class="main">
+
+<!-- ── GÖREVLER ── -->
+<div id="sec-tasks" class="sec on">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+    <h1 class="page-title" style="margin:0">Görevler</h1>
+    <button class="btn btn-green" onclick="openTaskModal()">+ Yeni Görev</button>
+  </div>
+  <div class="stat-row" id="task-stats"></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Başlık</th><th>Tür</th><th>XP</th><th>Set</th><th>Zorluk</th><th>Aktif</th><th></th></tr></thead>
+        <tbody id="tasks-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── ROLLER ── -->
+<div id="sec-roles" class="sec">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+    <h1 class="page-title" style="margin:0">Roller</h1>
+    <button class="btn btn-green" onclick="openRoleModal()">+ Yeni Rol</button>
+  </div>
+  <div id="roles-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem"></div>
+</div>
+
+<!-- ── SENARYOLAR ── -->
+<div id="sec-scenarios" class="sec">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+    <h1 class="page-title" style="margin:0">Senaryolar</h1>
+    <button class="btn btn-green" onclick="openScenarioModal()">+ Yeni Senaryo</button>
+  </div>
+  <div id="scenarios-list"></div>
+</div>
+
+<!-- ── KARAR AĞACI ── -->
+<div id="sec-branching" class="sec">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+    <h1 class="page-title" style="margin:0">Karar Ağacı Senaryoları</h1>
+    <button class="btn btn-green" onclick="openBranchModal()">+ Yeni Dal</button>
+  </div>
+  <div id="branching-list"></div>
+</div>
+
+<!-- ── QUIZler ── -->
+<div id="sec-quizzes" class="sec">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+    <h1 class="page-title" style="margin:0">Quizler</h1>
+    <button class="btn btn-green" onclick="openQuizModal()">+ Yeni Quiz Seti</button>
+  </div>
+  <div id="quizzes-list"></div>
+</div>
+
+<!-- ── KONUM GÖREVLERİ ── -->
+<div id="sec-locations" class="sec">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+    <h1 class="page-title" style="margin:0">Konum Görevleri</h1>
+    <button class="btn btn-green" onclick="openLocModal()">+ Yeni Konum</button>
+  </div>
+  <p style="font-size:.82rem;color:var(--gray-400);margin-bottom:1rem">
+    Haritaya tıklayarak koordinat seçin veya manuel girin.
+  </p>
+  <div id="loc-map"></div>
+  <div id="locations-list"></div>
+</div>
+
+<!-- ── JÜRİ ── -->
+<div id="sec-jury" class="sec">
+  <h1 class="page-title">Jüri Yapılandırması</h1>
+  <div class="card" id="jury-form-card"></div>
+</div>
+
+<!-- ── GRUPLAR ── -->
+<div id="sec-groups" class="sec">
+  <h1 class="page-title">Gruplar & Bot Ekosistemi</h1>
+  <div class="card">
+    <div class="ctitle">Organizatör Grubu</div>
+    <div id="org-group-form"></div>
+  </div>
+  <div class="card" style="margin-top:1rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div class="ctitle" style="margin:0">Takım Grupları</div>
+      <button class="btn btn-green btn-sm" onclick="addTeamGroup()">+ Grup</button>
+    </div>
+    <div id="team-groups-list"></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- ══ GÖREV MODAL ══ -->
+<div class="modal-bg" id="task-modal">
+<div class="modal">
+  <div class="modal-title" id="task-modal-title">Yeni Görev</div>
+  <input type="hidden" id="task-orig-id">
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">ID *</label><input class="form-input" id="task-id" placeholder="karbon_hesaplayici"></div>
+    <div class="form-group"><label class="form-label">XP Ödülü</label><input type="number" class="form-input" id="task-xp" value="300"></div>
+  </div>
+  <div class="form-group" style="margin-bottom:.75rem"><label class="form-label">Başlık (TR)</label><input class="form-input" id="task-title"></div>
+  <div class="form-group" style="margin-bottom:.75rem"><label class="form-label">Açıklama</label><textarea class="form-textarea" id="task-desc"></textarea></div>
+  <div class="form-row cols-3">
+    <div class="form-group"><label class="form-label">Tür</label>
+      <input class="form-input" id="task-type" placeholder="su_kalitesi"></div>
+    <div class="form-group"><label class="form-label">Zorluk</label>
+      <select class="form-select" id="task-diff">
+        <option value="kolay">Kolay</option><option value="orta" selected>Orta</option>
+        <option value="zor">Zor</option><option value="efsane">Efsane</option>
+      </select></div>
+    <div class="form-group"><label class="form-label">Görev Seti</label>
+      <input class="form-input" id="task-set" value="default"></div>
+  </div>
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">Rozet ID (opsiyonel)</label><input class="form-input" id="task-badge"></div>
+    <div class="form-group"><label class="form-label">Kanıt Türü</label>
+      <select class="form-select" id="task-proof">
+        <option value="link">Link</option><option value="dosya_veya_link">Dosya veya Link</option>
+        <option value="github_link">GitHub Link</option><option value="pdf">PDF</option>
+      </select></div>
+  </div>
+  <div class="form-group" style="margin-bottom:.75rem">
+    <label class="form-label">Stat Ödülleri (JSON)</label>
+    <textarea class="form-textarea form-mono" id="task-stats" placeholder='{"cevre_puani": 2, "analitik": 1}'></textarea>
+    <div class="form-hint">Nitelik adı: artış miktarı</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:.75rem">
+    <label class="toggle"><input type="checkbox" id="task-active" checked><span class="toggle-slider"></span></label>
+    <span style="font-size:.85rem">Aktif</span>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-g" onclick="closeModal('task-modal')">İptal</button>
+    <button class="btn btn-green" onclick="saveTask()">Kaydet</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ ROL MODAL ══ -->
+<div class="modal-bg" id="role-modal">
+<div class="modal">
+  <div class="modal-title">Rol Tanımı</div>
+  <input type="hidden" id="role-orig-key">
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">Anahtar (key) *</label><input class="form-input" id="role-key" placeholder="su_koruyucusu"></div>
+    <div class="form-group"><label class="form-label">Görünen Ad</label><input class="form-input" id="role-name" placeholder="Su Koruyucusu"></div>
+  </div>
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">Emoji</label><input class="form-input" id="role-emoji" placeholder="💧"></div>
+    <div class="form-group"><label class="form-label">Renk</label>
+      <select class="form-select" id="role-color">
+        <option value="green">Yeşil</option><option value="teal">Teal</option>
+        <option value="blue">Mavi</option><option value="amber">Amber</option>
+        <option value="coral">Mercan</option><option value="purple">Mor</option>
+      </select></div>
+  </div>
+  <div class="form-group" style="margin-bottom:.75rem"><label class="form-label">Açıklama</label><textarea class="form-textarea" id="role-desc"></textarea></div>
+  <div class="form-row cols-2">
+    <div class="form-group">
+      <label class="form-label">Bonus Görev Türleri (virgülle)</label>
+      <input class="form-input" id="role-bonus-types" placeholder="su_kalitesi, sulak_alan">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bonus Çarpanı</label>
+      <input type="number" step="0.05" class="form-input" id="role-bonus-mult" value="1.30">
+    </div>
+  </div>
+  <div class="form-group" style="margin-bottom:.75rem">
+    <label class="form-label">Başlangıç İstatistikleri (JSON)</label>
+    <textarea class="form-textarea form-mono" id="role-stats" placeholder='{"guc": 5, "cevre_puani": 9, "analitik": 8, "topluluk": 6}'></textarea>
+  </div>
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">Max Üye</label><input type="number" class="form-input" id="role-max-members" value="6"></div>
+    <div class="form-group"><label class="form-label">Açılma Seviyesi</label><input type="number" class="form-input" id="role-unlock-level" value="1"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-g" onclick="closeModal('role-modal')">İptal</button>
+    <button class="btn btn-green" onclick="saveRole()">Kaydet</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ SENARYO MODAL ══ -->
+<div class="modal-bg" id="scenario-modal">
+<div class="modal" style="max-width:720px">
+  <div class="modal-title">Senaryo</div>
+  <input type="hidden" id="sc-orig-id">
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">ID *</label><input class="form-input" id="sc-id" placeholder="iklim_hackathon"></div>
+    <div class="form-group"><label class="form-label">Adı</label><input class="form-input" id="sc-name"></div>
+  </div>
+  <div class="form-group" style="margin-bottom:.75rem"><label class="form-label">Açıklama</label><textarea class="form-textarea" id="sc-desc"></textarea></div>
+  <div style="display:flex;gap:1.5rem;margin-bottom:1rem">
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;cursor:pointer">
+      <label class="toggle"><input type="checkbox" id="sc-auto"><span class="toggle-slider"></span></label>Otomatik ilerle
+    </label>
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;cursor:pointer">
+      <label class="toggle"><input type="checkbox" id="sc-announce" checked><span class="toggle-slider"></span></label>Tüm gruplara duyur
+    </label>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+    <div style="font-size:.85rem;font-weight:600">Aşamalar</div>
+    <button class="btn btn-i btn-sm" onclick="addStage()">+ Aşama Ekle</button>
+  </div>
+  <div id="stages-list"></div>
+  <div class="modal-footer">
+    <button class="btn btn-g" onclick="closeModal('scenario-modal')">İptal</button>
+    <button class="btn btn-green" onclick="saveScenario()">Kaydet</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ KONUM MODAL ══ -->
+<div class="modal-bg" id="loc-modal">
+<div class="modal">
+  <div class="modal-title">Konum Görevi</div>
+  <input type="hidden" id="loc-orig-id">
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">Görev ID (tasks.yaml'dan)</label><input class="form-input" id="loc-task-id"></div>
+    <div class="form-group"><label class="form-label">Tolerans (metre)</label><input type="number" class="form-input" id="loc-radius" value="100"></div>
+  </div>
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">Ad (TR)</label><input class="form-input" id="loc-name-tr"></div>
+    <div class="form-group"><label class="form-label">Ad (EN)</label><input class="form-input" id="loc-name-en"></div>
+  </div>
+  <div class="form-row cols-2">
+    <div class="form-group"><label class="form-label">Enlem</label><input type="number" step="0.00001" class="form-input" id="loc-lat"></div>
+    <div class="form-group"><label class="form-label">Boylam</label><input type="number" step="0.00001" class="form-input" id="loc-lon"></div>
+  </div>
+  <div class="form-group" style="margin-bottom:.75rem"><label class="form-label">İpucu (TR)</label><input class="form-input" id="loc-hint-tr"></div>
+  <div class="form-group"><label class="form-label">İpucu (EN)</label><input class="form-input" id="loc-hint-en"></div>
+  <div class="modal-footer">
+    <button class="btn btn-g" onclick="closeModal('loc-modal')">İptal</button>
+    <button class="btn btn-green" onclick="saveLoc()">Kaydet</button>
+  </div>
+</div>
+</div>
+
+
+
+
+<button onclick="toggleTheme()" style="position:fixed;top:.75rem;right:1rem;z-index:999;background:transparent;border:1px solid var(--gray-200);border-radius:6px;padding:.3rem .55rem;cursor:pointer;color:var(--gray-600);font-size:.85rem;line-height:1" title="Tema"><span id="th-icon">☀</span></button>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const API = '/admin/yaml';
+let mapInstance=null,mapMarker=null;
+const LANG='{{ lang }}';
+
+const SECTIONS=['tasks','roles','scenarios','branching','quizzes','locations','jury','groups'];
+function show(id,btn){
+  SECTIONS.forEach(s=>{document.getElementById(`sec-${s}`)?.classList.remove('active')});
+  document.querySelectorAll('.sblink').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`sec-${id}`)?.classList.add('active');
+  if(btn) btn.classList.add('active');
+  loadSection(id);
+}
+
+async function loadSection(id){
+  if(id==='tasks') await loadTasks();
+  else if(id==='roles') await loadRoles();
+  else if(id==='scenarios') await loadScenarios();
+  else if(id==='branching') await loadBranching();
+  else if(id==='quizzes') await loadQuizzes();
+  else if(id==='locations') await loadLocations();
+  else if(id==='jury') await loadJury();
+  else if(id==='groups') await loadGroups();
+}
+
+async function api(method,path,body=null){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(API+path,opts);
+  return r.json();
+}
+
+
+const API = '/admin/yaml';
+let mapInstance = null, mapMarker = null;
+
+// ── Navigasyon ──────────────────────────────
+const SECTIONS = ['tasks','roles','scenarios','branching','quizzes','locations','jury','groups'];
+function show(id, btn) {
+  SECTIONS.forEach(s => {
+    document.getElementById(`sec-${s}`)?.classList.remove('active');
+  });
+  document.querySelectorAll('.sblink').forEach(b => b.classList.remove('active'));
+  document.getElementById(`sec-${id}`)?.classList.add('active');
+  if(btn) btn.classList.add('active');
+  loadSection(id);
+}
+
+async function loadSection(id) {
+  if(id==='tasks') await loadTasks();
+  else if(id==='roles') await loadRoles();
+  else if(id==='scenarios') await loadScenarios();
+  else if(id==='branching') await loadBranching();
+  else if(id==='quizzes') await loadQuizzes();
+  else if(id==='locations') await loadLocations();
+  else if(id==='jury') await loadJury();
+  else if(id==='groups') await loadGroups();
+}
+
+// ── Toast ───────────────────────────────────
+function toast(msg, type='s') {
+  const el = document.createElement('div');
+  el.className = `toast t${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ── API yardımcıları ───────────────────────
+async function api(method, path, body=null) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(API+path, opts);
+  return r.json();
+}
+
+// ── Modal ───────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if(e.target===bg) bg.classList.remove('open'); });
+});
+
+// ══════════════════════════════════════════
+// GÖREVLER
+// ══════════════════════════════════════════
+async function loadTasks() {
+  const tasks = await api('GET','/tasks');
+  const active = tasks.filter(t=>t.active).length;
+  document.getElementById('task-stats').innerHTML = `
+    <div class="stat"><div class="stat-num">${tasks.length}</div><div class="stat-label">Toplam Görev</div></div>
+    <div class="stat"><div class="stat-num">${active}</div><div class="stat-label">Aktif</div></div>
+    <div class="stat"><div class="stat-num">${tasks.length-active}</div><div class="stat-label">Pasif</div></div>
+  `;
+  const diffBadge = {kolay:'bg',orta:'ba',zor:'br',efsane:'bt'};
+  document.getElementById('tasks-tbody').innerHTML = tasks.map(t => `
+    <tr>
+      <td><code style="font-size:.75rem">${t.id}</code></td>
+      <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.title||''}</td>
+      <td><span class="badge bmute">${t.type||''}</span></td>
+      <td style="font-weight:600;color:var(--g8)">+${t.xp_reward||0}</td>
+      <td><span class="badge bmute" style="font-size:.65rem">${t.task_set||'default'}</span></td>
+      <td><span class="badge ${diffBadge[t.difficulty]||'bgr'}">${t.difficulty||''}</span></td>
+      <td>
+        <label class="toggle">
+          <input type="checkbox" ${t.active?'checked':''} onchange="toggleTask('${t.id}',this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
+      <td style="display:flex;gap:.35rem">
+        <button class="btn btn-g btn-sm" onclick="editTask(${JSON.stringify(t).replace(/"/g,'&quot;')})">Düzenle</button>
+        <button class="btn btn-red btn-sm" onclick="deleteTask('${t.id}')">Sil</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openTaskModal(task=null) {
+  document.getElementById('task-modal-title').textContent = task ? 'Görevi Düzenle' : 'Yeni Görev';
+  document.getElementById('task-orig-id').value = task?.id || '';
+  document.getElementById('task-id').value = task?.id || '';
+  document.getElementById('task-id').disabled = !!task;
+  document.getElementById('task-title').value = task?.title || '';
+  document.getElementById('task-desc').value = task?.description || '';
+  document.getElementById('task-xp').value = task?.xp_reward || 300;
+  document.getElementById('task-type').value = task?.type || '';
+  document.getElementById('task-diff').value = task?.difficulty || 'orta';
+  document.getElementById('task-set').value = task?.task_set || 'default';
+  document.getElementById('task-badge').value = task?.badge_reward || '';
+  document.getElementById('task-proof').value = task?.proof_type || 'link';
+  document.getElementById('task-stats').value = JSON.stringify(task?.stat_rewards||{}, null, 2);
+  document.getElementById('task-active').checked = task?.active !== false;
+  openModal('task-modal');
+}
+
+function editTask(task) { openTaskModal(task); }
+
+async function saveTask() {
+  let stat_rewards = {};
+  try { stat_rewards = JSON.parse(document.getElementById('task-stats').value||'{}'); }
+  catch { toast('Stat ödülleri geçersiz JSON','e'); return; }
+  const task = {
+    id: document.getElementById('task-id').value,
+    title: document.getElementById('task-title').value,
+    description: document.getElementById('task-desc').value,
+    xp_reward: parseInt(document.getElementById('task-xp').value)||0,
+    type: document.getElementById('task-type').value,
+    difficulty: document.getElementById('task-diff').value,
+    task_set: document.getElementById('task-set').value||'default',
+    badge_reward: document.getElementById('task-badge').value||null,
+    proof_type: document.getElementById('task-proof').value,
+    stat_rewards, active: document.getElementById('task-active').checked,
+    starts_at: null, ends_at: null,
+  };
+  if(!task.id) { toast('ID gerekli','e'); return; }
+  const origId = document.getElementById('task-orig-id').value;
+  const r = await api(origId ? 'PUT' : 'POST', origId ? `/tasks/${origId}` : '/tasks', task);
+  if(r.ok) { toast('✅ Görev kaydedildi'); closeModal('task-modal'); loadTasks(); }
+  else toast('Hata: '+JSON.stringify(r),'e');
+}
+
+async function deleteTask(id) {
+  if(!confirm(`"${id}" silinsin mi?`)) return;
+  const r = await api('DELETE',`/tasks/${id}`);
+  if(r.ok) { toast('Görev silindi'); loadTasks(); }
+}
+
+async function toggleTask(id, active) {
+  await api('PATCH',`/tasks/${id}/toggle`,{active});
+  toast(active ? '✅ Aktif edildi' : '⏸ Pasif edildi');
+}
+
+// ══════════════════════════════════════════
+// ROLLER
+// ══════════════════════════════════════════
+async function loadRoles() {
+  const roles = await api('GET','/roles');
+  const colorMap = {green:'var(--g1)',teal:'var(--t1)',blue:'var(--b1)',amber:'var(--a1)',coral:'var(--r1)',purple:'#EEEDFE'};
+  document.getElementById('roles-grid').innerHTML = roles.map(r => `
+    <div class="card" style="border-left:4px solid ${colorMap[r.color]||'var(--g1)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem">
+        <div>
+          <div style="font-size:1.5rem;margin-bottom:.25rem">${r.emoji||'?'}</div>
+          <div style="font-weight:600;font-size:.9rem">${r.display_name||r.key}</div>
+          <code style="font-size:.72rem;color:var(--gray-400)">${r.key}</code>
+        </div>
+        <div style="display:flex;gap:.35rem">
+          <button class="btn btn-g btn-sm" onclick="editRole(${JSON.stringify(r).replace(/"/g,'&quot;')})">Düzenle</button>
+          <button class="btn btn-red btn-sm" onclick="deleteRole('${r.key}')">Sil</button>
+        </div>
+      </div>
+      <div style="font-size:.78rem;color:var(--gray-600);margin-bottom:.5rem">${r.description||''}</div>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+        ${(r.bonus_task_types||[]).map(bt=>`<span class="badge bok" style="font-size:.65rem">${bt}</span>`).join('')}
+        <span class="badge binfo">×${r.bonus_multiplier||1}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openRoleModal(role=null) {
+  document.getElementById('role-orig-key').value = role?.key||'';
+  document.getElementById('role-key').value = role?.key||'';
+  document.getElementById('role-key').disabled = !!role;
+  document.getElementById('role-name').value = role?.display_name||'';
+  document.getElementById('role-emoji').value = role?.emoji||'';
+  document.getElementById('role-color').value = role?.color||'green';
+  document.getElementById('role-desc').value = role?.description||'';
+  document.getElementById('role-bonus-types').value = (role?.bonus_task_types||[]).join(', ');
+  document.getElementById('role-bonus-mult').value = role?.bonus_multiplier||1.30;
+  document.getElementById('role-stats').value = JSON.stringify(role?.stats||{guc:5,cevre_puani:7,analitik:5,topluluk:5},null,2);
+  document.getElementById('role-max-members').value = role?.max_members||6;
+  document.getElementById('role-unlock-level').value = role?.unlocks_at_level||1;
+  openModal('role-modal');
+}
+
+function editRole(r) { openRoleModal(r); }
+
+async function saveRole() {
+  let stats={};
+  try{ stats=JSON.parse(document.getElementById('role-stats').value||'{}'); }
+  catch{ toast('Stats geçersiz JSON','e'); return; }
+  const key = document.getElementById('role-key').value;
+  const origKey = document.getElementById('role-orig-key').value;
+  const role = {
+    display_name: document.getElementById('role-name').value,
+    emoji: document.getElementById('role-emoji').value,
+    color: document.getElementById('role-color').value,
+    description: document.getElementById('role-desc').value,
+    bonus_task_types: document.getElementById('role-bonus-types').value.split(',').map(s=>s.trim()).filter(Boolean),
+    bonus_multiplier: parseFloat(document.getElementById('role-bonus-mult').value)||1.3,
+    stats, max_members: parseInt(document.getElementById('role-max-members').value)||6,
+    unlocks_at_level: parseInt(document.getElementById('role-unlock-level').value)||1,
+  };
+  const r = await api(origKey?'PUT':'POST', origKey?`/roles/${origKey}`:`/roles`, origKey?role:{key,...role});
+  if(r.ok){ toast('✅ Rol kaydedildi'); closeModal('role-modal'); loadRoles(); }
+  else toast('Hata','e');
+}
+
+async function deleteRole(key) {
+  if(!confirm(`"${key}" rolü silinsin mi?`)) return;
+  const r = await api('DELETE',`/roles/${key}`);
+  if(r.ok){ toast('Rol silindi'); loadRoles(); }
+}
+
+// ══════════════════════════════════════════
+// SENARYOLAR
+// ══════════════════════════════════════════
+let currentStages = [];
+
+async function loadScenarios() {
+  const scenarios = await api('GET','/scenarios');
+  document.getElementById('scenarios-list').innerHTML = scenarios.map(s => `
+    <div class="card" style="${s.active?'border-color:var(--g6);border-width:2px':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:600;font-size:.95rem">${s.name||s.id} ${s.active?'<span class="badge bok">Aktif</span>':''}</div>
+          <code style="font-size:.72rem;color:var(--gray-400)">${s.id}</code>
+          <div style="font-size:.8rem;color:var(--gray-600);margin-top:.25rem">${(s.stages||[]).length} aşama · ${s.auto_advance?'Otomatik':'Manuel'}</div>
+        </div>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end">
+          ${!s.active?`<button class="btn btn-green btn-sm" onclick="activateScenario('${s.id}')">Aktif Yap</button>`:''}
+          <button class="btn btn-g btn-sm" onclick="editScenario(${JSON.stringify(s).replace(/"/g,'&quot;')})">Düzenle</button>
+        </div>
+      </div>
+      <div style="margin-top:.75rem;display:flex;gap:.4rem;flex-wrap:wrap">
+        ${(s.stages||[]).map((st,i)=>`<span class="badge bmute" style="font-size:.65rem">${i+1}. ${st.name||st.id} (${st.xp_multiplier||1}x)</span>`).join('')}
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--gray-400)">Henüz senaryo yok.</p>';
+}
+
+function openScenarioModal(sc=null) {
+  document.getElementById('sc-orig-id').value = sc?.id||'';
+  document.getElementById('sc-id').value = sc?.id||'';
+  document.getElementById('sc-id').disabled = !!sc;
+  document.getElementById('sc-name').value = sc?.name||'';
+  document.getElementById('sc-desc').value = sc?.description||'';
+  document.getElementById('sc-auto').checked = sc?.auto_advance||false;
+  document.getElementById('sc-announce').checked = sc?.announce_to_all_groups!==false;
+  currentStages = JSON.parse(JSON.stringify(sc?.stages||[]));
+  renderStages();
+  openModal('scenario-modal');
+}
+
+function editScenario(sc) { openScenarioModal(sc); }
+
+function renderStages() {
+  document.getElementById('stages-list').innerHTML = currentStages.map((st,i) => `
+    <div class="card" style="background:var(--gray-50);margin-bottom:.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <span style="font-size:.82rem;font-weight:600">${i+1}. Aşama</span>
+        <button class="btn btn-red btn-sm" onclick="removeStage(${i})">Sil</button>
+      </div>
+      <div class="form-row cols-2" style="margin-bottom:.5rem">
+        <input class="form-input" placeholder="ID" value="${st.id||''}" oninput="updateStage(${i},'id',this.value)">
+        <input class="form-input" placeholder="Adı" value="${st.name||''}" oninput="updateStage(${i},'name',this.value)">
+      </div>
+      <div class="form-row cols-3">
+        <input type="number" class="form-input" placeholder="Süre (dk)" value="${st.duration_minutes||60}" oninput="updateStage(${i},'duration_minutes',+this.value)">
+        <input class="form-input" placeholder="Görev seti" value="${st.task_set||'default'}" oninput="updateStage(${i},'task_set',this.value)">
+        <input type="number" step="0.1" class="form-input" placeholder="XP çarpanı" value="${st.xp_multiplier||1}" oninput="updateStage(${i},'xp_multiplier',+this.value)">
+      </div>
+    </div>
+  `).join('') || '<p style="font-size:.82rem;color:var(--gray-400)">Henüz aşama yok.</p>';
+}
+
+function addStage() {
+  currentStages.push({id:`stage_${currentStages.length+1}`,name:'',duration_minutes:60,task_set:'default',xp_multiplier:1,unlock_next_on:'manual',is_final:currentStages.length===0,completion_message_tr:'',completion_message_en:''});
+  renderStages();
+}
+
+function removeStage(i) { currentStages.splice(i,1); renderStages(); }
+function updateStage(i,k,v) { currentStages[i][k]=v; }
+
+async function saveScenario() {
+  const origId = document.getElementById('sc-orig-id').value;
+  const sc = {
+    id: document.getElementById('sc-id').value,
+    name: document.getElementById('sc-name').value,
+    description: document.getElementById('sc-desc').value,
+    active: false,
+    auto_advance: document.getElementById('sc-auto').checked,
+    announce_to_all_groups: document.getElementById('sc-announce').checked,
+    stages: currentStages.map((st,i)=>({...st,order:i+1,is_final:i===currentStages.length-1})),
+  };
+  const r = await api(origId?'PUT':'POST', origId?`/scenarios/${origId}`:`/scenarios`, sc);
+  if(r.ok){ toast('✅ Senaryo kaydedildi'); closeModal('scenario-modal'); loadScenarios(); }
+  else toast('Hata','e');
+}
+
+async function activateScenario(id) {
+  const r = await api('PATCH',`/scenarios/${id}/activate`);
+  if(r.ok){ toast('✅ Senaryo aktif edildi'); loadScenarios(); }
+}
+
+// ══════════════════════════════════════════
+// KARAR AĞACI
+// ══════════════════════════════════════════
+async function loadBranching() {
+  const data = await api('GET','/branching');
+  document.getElementById('branching-list').innerHTML = data.map(bs => `
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:.5rem">${bs.name_tr||bs.id}</div>
+      <code style="font-size:.72rem;color:var(--gray-400)">${bs.id} · ${(bs.nodes||[]).length} düğüm</code>
+      <div style="margin-top:.75rem;display:flex;gap:.4rem;flex-wrap:wrap">
+        ${(bs.nodes||[]).map(n=>`<span class="node-card type-${n.type}" style="padding:.25rem .6rem;margin:0;display:inline-block;font-size:.7rem">${n.type==='choice'?'🔀':n.type==='task_set'?'📋':'🏁'} ${n.id}</span>`).join('')}
+      </div>
+      <div style="margin-top:.75rem"><button class="btn btn-g btn-sm" onclick="editBranching(${JSON.stringify(bs).replace(/"/g,'&quot;')})">JSON Düzenle</button></div>
+    </div>
+  `).join('') || '<p style="color:var(--gray-400)">Henüz karar ağacı yok.</p>';
+}
+
+function openBranchModal() {
+  const json = JSON.stringify({id:'yeni_dal',name_tr:'Yeni Dal',name_en:'New Branch',root_node:'baslangic',nodes:[{id:'baslangic',type:'choice',title_tr:'Seçim başlığı',title_en:'',description_tr:'',description_en:'',choices:[{id:'sec1',label_tr:'Seçenek 1',label_en:'Option 1',emoji:'🌿',next_node:'hedef_dugum',xp_bonus:0}]},{id:'hedef_dugum',type:'task_set',title_tr:'Görev Kolu',title_en:'',description_tr:'',description_en:'',task_set:'default',xp_multiplier:1.0,choices:[]}]},null,2);
+  editBranchingJson(json);
+}
+
+function editBranching(bs) { editBranchingJson(JSON.stringify(bs,null,2)); }
+
+function editBranchingJson(json) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg open';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:760px">
+      <div class="modal-title">Karar Ağacı (JSON)</div>
+      <textarea class="form-textarea form-mono" id="branch-json" style="min-height:400px">${json}</textarea>
+      <div class="form-hint">nodes[].type: "choice" | "task_set" | "end"</div>
+      <div class="modal-footer">
+        <button class="btn btn-g" onclick="this.closest('.modal-bg').remove()">İptal</button>
+        <button class="btn btn-green" onclick="saveBranchJson(this)">Kaydet</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+}
+
+async function saveBranchJson(btn) {
+  let bs;
+  try { bs = JSON.parse(document.getElementById('branch-json').value); }
+  catch(e) { toast('Geçersiz JSON: '+e.message,'e'); return; }
+  const r = await api(bs.id ? 'PUT':'POST', bs.id?`/branching/${bs.id}`:`/branching`, bs);
+  if(r.ok){ toast('✅ Kaydedildi'); btn.closest('.modal-bg').remove(); loadBranching(); }
+  else toast('Hata','e');
+}
+
+// ══════════════════════════════════════════
+// QUIZler
+// ══════════════════════════════════════════
+async function loadQuizzes() {
+  const data = await api('GET','/quizzes');
+  document.getElementById('quizzes-list').innerHTML = data.map(qs => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:600">${qs.title_tr||qs.id}</div>
+          <code style="font-size:.72rem;color:var(--gray-400)">${qs.id}</code>
+          <div style="font-size:.8rem;color:var(--gray-600);margin-top:.25rem">${(qs.questions||[]).length} soru · Cooldown: ${qs.cooldown_minutes||60}dk</div>
+        </div>
+        <div style="display:flex;gap:.35rem">
+          <button class="btn btn-g btn-sm" onclick="editQuizJson(${JSON.stringify(qs).replace(/"/g,'&quot;')})">JSON Düzenle</button>
+          <button class="btn btn-red btn-sm" onclick="deleteQuiz('${qs.id}')">Sil</button>
+        </div>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--gray-400)">Henüz quiz yok.</p>';
+}
+
+function openQuizModal() {
+  const template = JSON.stringify({id:'yeni_quiz',title_tr:'Quiz Adı',title_en:'Quiz Name',cooldown_minutes:60,questions:[{id:'q1',text_tr:'Soru metni?',text_en:'Question text?',options_tr:['Seçenek A','Seçenek B','Seçenek C','Seçenek D'],options_en:['Option A','Option B','Option C','Option D'],correct_index:0,xp_reward:50,explanation_tr:'',explanation_en:''}]},null,2);
+  editQuizJsonStr(template);
+}
+
+function editQuizJson(qs) { editQuizJsonStr(JSON.stringify(qs,null,2)); }
+
+function editQuizJsonStr(json) {
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg open';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:760px">
+      <div class="modal-title">Quiz Seti (JSON)</div>
+      <textarea class="form-textarea form-mono" id="quiz-json" style="min-height:420px">${json}</textarea>
+      <div class="modal-footer">
+        <button class="btn btn-g" onclick="this.closest('.modal-bg').remove()">İptal</button>
+        <button class="btn btn-green" onclick="saveQuizJson(this)">Kaydet</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+}
+
+async function saveQuizJson(btn) {
+  let qs;
+  try { qs = JSON.parse(document.getElementById('quiz-json').value); }
+  catch(e) { toast('Geçersiz JSON','e'); return; }
+  const r = await api(qs.id?'PUT':'POST', qs.id?`/quizzes/${qs.id}`:`/quizzes`, qs);
+  if(r.ok){ toast('✅ Quiz kaydedildi'); btn.closest('.modal-bg').remove(); loadQuizzes(); }
+  else toast('Hata','e');
+}
+
+async function deleteQuiz(id) {
+  if(!confirm('Quiz silinsin mi?')) return;
+  const r = await api('DELETE',`/quizzes/${id}`);
+  if(r.ok){ toast('Silindi'); loadQuizzes(); }
+}
+
+// ══════════════════════════════════════════
+// KONUM GÖREVLERİ (Leaflet harita)
+// ══════════════════════════════════════════
+async function loadLocations() {
+  if(!mapInstance) initMap();
+  const data = await api('GET','/location-tasks');
+  document.getElementById('locations-list').innerHTML = data.map(lt => `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:600">${lt.name_tr||lt.task_id}</div>
+        <div style="font-size:.78rem;color:var(--gray-600)">${lt.task_id} · ${lt.lat},${lt.lon} · ${lt.radius_meters}m</div>
+      </div>
+      <div style="display:flex;gap:.35rem">
+        <button class="btn btn-g btn-sm" onclick="editLoc(${JSON.stringify(lt).replace(/"/g,'&quot;')})">Düzenle</button>
+        <button class="btn btn-red btn-sm" onclick="deleteLoc('${lt.task_id}')">Sil</button>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--gray-400);font-size:.84rem">Henüz konum görevi yok.</p>';
+}
+
+function initMap() {
+  if(typeof L === 'undefined') return;
+  mapInstance = L.map('loc-map').setView([37.75, 30.55], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {attribution:'© OpenStreetMap'}).addTo(mapInstance);
+  mapInstance.on('click', e => {
+    const {lat,lng} = e.latlng;
+    if(mapMarker) mapMarker.setLatLng([lat,lng]);
+    else mapMarker = L.marker([lat,lng]).addTo(mapInstance);
+    document.getElementById('loc-lat').value = lat.toFixed(5);
+    document.getElementById('loc-lon').value = lng.toFixed(5);
+  });
+}
+
+function openLocModal(lt=null) {
+  document.getElementById('loc-orig-id').value = lt?.task_id||'';
+  document.getElementById('loc-task-id').value = lt?.task_id||'';
+  document.getElementById('loc-radius').value = lt?.radius_meters||100;
+  document.getElementById('loc-name-tr').value = lt?.name_tr||'';
+  document.getElementById('loc-name-en').value = lt?.name_en||'';
+  document.getElementById('loc-lat').value = lt?.lat||'';
+  document.getElementById('loc-lon').value = lt?.lon||'';
+  document.getElementById('loc-hint-tr').value = lt?.hint_tr||'';
+  document.getElementById('loc-hint-en').value = lt?.hint_en||'';
+  if(lt && mapInstance) {
+    mapMarker?.setLatLng([lt.lat,lt.lon]);
+    if(!mapMarker) mapMarker = L.marker([lt.lat,lt.lon]).addTo(mapInstance);
+    mapInstance.setView([lt.lat,lt.lon], 14);
+  }
+  openModal('loc-modal');
+}
+
+function editLoc(lt) { openLocModal(lt); }
+
+async function saveLoc() {
+  const lt = {
+    task_id: document.getElementById('loc-task-id').value,
+    name_tr: document.getElementById('loc-name-tr').value,
+    name_en: document.getElementById('loc-name-en').value,
+    lat: parseFloat(document.getElementById('loc-lat').value)||0,
+    lon: parseFloat(document.getElementById('loc-lon').value)||0,
+    radius_meters: parseInt(document.getElementById('loc-radius').value)||100,
+    hint_tr: document.getElementById('loc-hint-tr').value,
+    hint_en: document.getElementById('loc-hint-en').value,
+  };
+  const origId = document.getElementById('loc-orig-id').value;
+  const r = await api(origId?'PUT':'POST', origId?`/location-tasks/${origId}`:`/location-tasks`, lt);
+  if(r.ok){ toast('✅ Konum kaydedildi'); closeModal('loc-modal'); loadLocations(); }
+  else toast('Hata','e');
+}
+
+async function deleteLoc(id) {
+  if(!confirm('Silinsin mi?')) return;
+  await api('DELETE',`/location-tasks/${id}`);
+  toast('Silindi'); loadLocations();
+}
+
+// ══════════════════════════════════════════
+// JÜRİ
+// ══════════════════════════════════════════
+async function loadJury() {
+  const jury = await api('GET','/jury');
+  document.getElementById('jury-form-card').innerHTML = `
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label class="form-label">Etkin mi?</label>
+        <select class="form-select" id="jury-enabled">
+          <option value="true" ${jury.enabled?'selected':''}>Evet</option>
+          <option value="false" ${!jury.enabled?'selected':''}>Hayır</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">XP Ağırlığı (%)</label>
+        <input type="number" class="form-input" id="jury-xp-weight" value="${jury.xp_weight*100||60}"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:.75rem">
+      <label class="form-label">Jüri Üye ID'leri (virgülle ayrılmış Telegram ID)</label>
+      <input class="form-input" id="jury-members" value="${(jury.members||[]).join(', ')}">
+    </div>
+    <div class="form-group" style="margin-bottom:.75rem">
+      <label class="form-label">Kriterler (JSON)</label>
+      <textarea class="form-textarea form-mono" id="jury-criteria">${JSON.stringify(jury.criteria||[],null,2)}</textarea>
+    </div>
+    <button class="btn btn-green" onclick="saveJury()">Kaydet</button>
+  `;
+}
+
+async function saveJury() {
+  let criteria=[];
+  try { criteria=JSON.parse(document.getElementById('jury-criteria').value||'[]'); }
+  catch{ toast('Kriterler geçersiz JSON','e'); return; }
+  const members = document.getElementById('jury-members').value
+    .split(',').map(s=>parseInt(s.trim())).filter(Boolean);
+  const xpW = parseInt(document.getElementById('jury-xp-weight').value)||60;
+  const jury = {
+    enabled: document.getElementById('jury-enabled').value==='true',
+    xp_weight: xpW, jury_weight: 100-xpW,
+    members, criteria,
+    scoring:{min:0,max:100,allow_update:true,anonymous:false}
+  };
+  const r = await api('PUT','/jury',jury);
+  if(r.ok) toast('✅ Jüri yapılandırması kaydedildi');
+  else toast('Hata','e');
+}
+
+// ══════════════════════════════════════════
+// GRUPLAR
+// ══════════════════════════════════════════
+async function loadGroups() {
+  const data = await api('GET','/groups');
+  const eco = data.ecosystem||{};
+  const org = eco.org_group||{};
+  document.getElementById('org-group-form').innerHTML = `
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="form-label">Chat ID</label>
+        <input class="form-input" id="org-chat-id" value="${org.chat_id||0}" placeholder="-1001234567890"></div>
+      <div class="form-group"><label class="form-label">Ad</label>
+        <input class="form-input" id="org-name" value="${org.name||''}"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:.75rem"><label class="form-label">Bot Token Env Değişkeni</label>
+      <input class="form-input" id="org-token-env" value="${org.bot_token_env||'ALEV_BOT_TOKEN'}"></div>
+    <button class="btn btn-green btn-sm" onclick="saveOrgGroup()">Kaydet</button>
+  `;
+  window._groupsData = data;
+  renderTeamGroups(data.ecosystem?.team_groups||[]);
+}
+
+function renderTeamGroups(groups) {
+  document.getElementById('team-groups-list').innerHTML = groups.map((g,i) => `
+    <div class="card" style="background:var(--gray-50);margin-bottom:.5rem">
+      <div class="form-row cols-2" style="margin-bottom:.5rem">
+        <input class="form-input" placeholder="ID" value="${g.id||''}" oninput="updateGroup(${i},'id',this.value)">
+        <input class="form-input" placeholder="Ad" value="${g.name||''}" oninput="updateGroup(${i},'name',this.value)">
+      </div>
+      <div class="form-row cols-3">
+        <input class="form-input" placeholder="Chat ID" value="${g.chat_id||0}" oninput="updateGroup(${i},'chat_id',+this.value)">
+        <input class="form-input" placeholder="Görev seti" value="${g.task_set||'default'}" oninput="updateGroup(${i},'task_set',this.value)">
+        <input class="form-input" placeholder="Bot token env" value="${g.bot_token_env||'ALEV_BOT_TOKEN'}" oninput="updateGroup(${i},'bot_token_env',this.value)">
+      </div>
+      <button class="btn btn-red btn-sm" style="margin-top:.5rem" onclick="removeGroup(${i})">Grubu Sil</button>
+    </div>
+  `).join('');
+}
+
+function addTeamGroup() {
+  const data = window._groupsData||{};
+  const groups = data.ecosystem?.team_groups||[];
+  groups.push({id:`group_${groups.length+1}`,chat_id:0,name:'Yeni Grup',bot_token_env:'ALEV_BOT_TOKEN',task_set:'default',leaderboard_scope:'local',active:true});
+  if(!data.ecosystem) data.ecosystem={};
+  data.ecosystem.team_groups = groups;
+  window._groupsData = data;
+  renderTeamGroups(groups);
+}
+
+function removeGroup(i) {
+  window._groupsData.ecosystem.team_groups.splice(i,1);
+  renderTeamGroups(window._groupsData.ecosystem.team_groups);
+}
+
+function updateGroup(i,k,v) { window._groupsData.ecosystem.team_groups[i][k]=v; }
+
+async function saveOrgGroup() {
+  const data = window._groupsData||{};
+  if(!data.ecosystem) data.ecosystem={};
+  if(!data.ecosystem.org_group) data.ecosystem.org_group={};
+  data.ecosystem.org_group.chat_id = parseInt(document.getElementById('org-chat-id').value)||0;
+  data.ecosystem.org_group.name = document.getElementById('org-name').value;
+  data.ecosystem.org_group.bot_token_env = document.getElementById('org-token-env').value||'ALEV_BOT_TOKEN';
+  const r = await api('PUT','/groups',data);
+  if(r.ok) toast('✅ Grup yapılandırması kaydedildi');
+  else toast('Hata','e');
+}
+
+// ══════════════════════════════════════════
+// HOT-RELOAD
+// ══════════════════════════════════════════
+async function forceReload() {
+  const r = await api('POST','/reload');
+  toast(r.ok ? '✅ Config yeniden yüklendi' : '❌ Hata', r.ok?'s':'e');
+}
+
+// ── İlk yükleme ─────────────────────────
+loadTasks();
+
+// ── Leaflet haritası yükle ───────────────
+const leafletCSS = document.createElement('link');
+leafletCSS.rel = 'stylesheet';
+leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+document.head.appendChild(leafletCSS);
+const leafletJS = document.createElement('script');
+leafletJS.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+document.head.appendChild(leafletJS);
+
+
+(function(){
+  const s=localStorage.getItem('alev-theme');
+  const sys=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',s||sys);
+})();
+function toggleTheme(){
+  const c=document.documentElement.getAttribute('data-theme')||'dark';
+  const n=c==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('alev-theme',n);
+  const i=document.getElementById('th-icon');
+  if(i) i.textContent=n==='dark'?'☀':'◑';
+}
+
+
+loadTasks();
+</script>
+{% endblock %}

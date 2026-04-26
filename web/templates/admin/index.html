@@ -1,0 +1,352 @@
+{% extends "shared/admin_base.html" %}
+{% block title %}{{ brand.name }} — Admin{% endblock %}
+{% block tbar_title %}{% if lang=='tr' %}Etkinlikler{% else %}Events{% endif %}{% endblock %}
+
+{% block sidebar %}
+<div class="sbsec">{% if lang=='tr' %}Genel{% else %}General{% endif %}</div>
+<a class="sblink on" href="/admin"><span class="sbico">⬡</span>{% if lang=='tr' %}Etkinlikler{% else %}Events{% endif %}</a>
+<a class="sblink" href="/admin/bot_manager"><span class="sbico">◎</span>{% if lang=='tr' %}Botlar{% else %}Bots{% endif %}</a>
+{% endblock %}
+
+
+{% block help_content %}
+<div class="help-section">
+  <div class="help-section-title">🎯 {{ t.events.hierarchy_title }}</div>
+  <div class="help-text">{{ t.events.hierarchy_desc }}</div>
+</div>
+<div class="help-section">
+  <div class="help-section-title">📋 {{ t.help.start_order }}</div>
+  <div class="help-step"><div class="help-step-num">1</div><div class="help-step-text">{{ t.help.step1 }}</div></div>
+  <div class="help-step"><div class="help-step-num">2</div><div class="help-step-text">{{ t.help.step2 }}</div></div>
+  <div class="help-step"><div class="help-step-num">3</div><div class="help-step-text">{{ t.help.step3 }}</div></div>
+  <div class="help-step"><div class="help-step-num">4</div><div class="help-step-text">{{ t.help.step4 }}</div></div>
+  <div class="help-step"><div class="help-step-num">5</div><div class="help-step-text">{{ t.help.step5 }}</div></div>
+  <div class="help-step"><div class="help-step-num">6</div><div class="help-step-text">{{ t.help.step6 }}</div></div>
+</div>
+<div class="help-tip">{{ t.help.tip_telegram }}</div>
+<hr style="border:none;border-top:1px solid var(--b1);margin:.75rem 0">
+<div class="help-section">
+  <div class="help-section-title">📡 {{ t.help.tip_tg_setup }}</div>
+  <div class="help-text">{{ t.help.tg_setup_steps }}</div>
+</div>
+{% endblock %}
+
+{% block breadcrumb %}
+<a href="/admin" class="bc-link" style="color:var(--ac);font-weight:700">⬡ {{ t.admin.events }}</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.wizard-steps{display:flex;gap:0;margin-bottom:2rem;position:relative}
+.wizard-steps::before{content:'';position:absolute;top:14px;left:0;right:0;height:1.5px;background:var(--b1);z-index:0}
+.wstep{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1}
+.wsdot{width:28px;height:28px;border-radius:50%;border:2px solid var(--b2);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:.3rem;transition:all .2s}
+.wstep.done .wsdot{border-color:var(--ok);background:var(--ok);color:#0d0e0f}
+.wstep.active .wsdot{border-color:var(--ac);background:var(--ac);color:#0d0e0f}
+.wslabel{font-size:.62rem;font-family:'DM Mono',monospace;color:var(--mu);text-align:center}
+.wstep.active .wslabel{color:var(--ac)}
+.wstep.done .wslabel{color:var(--ok)}
+.ev-card{background:var(--bg2);border:1.5px solid var(--b1);border-radius:16px;overflow:hidden;transition:all .2s}
+.ev-card:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:var(--sh)}
+.ev-card.active-ev{border-color:var(--ac);border-top-width:3px}
+.ev-card-head{padding:1.1rem 1.25rem;border-bottom:1px solid var(--b1)}
+.ev-card-body{padding:1rem 1.25rem}
+.ev-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ev-status-dot.active{background:var(--ok);box-shadow:0 0 6px var(--ok);animation:gp 2s infinite}
+.ev-status-dot.draft{background:var(--mu)}
+.ev-status-dot.paused{background:var(--ac)}
+.ev-status-dot.ended{background:var(--er)}
+.tip-box{background:var(--acl);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:.75rem 1rem;font-size:.84rem;color:var(--so);margin-bottom:1.5rem;line-height:1.6}
+.tip-box strong{color:var(--ac)}
+/* Emoji picker */
+.emoji-wrap{position:relative}
+.emoji-inp{cursor:pointer;font-size:1.3rem;text-align:center;padding:.45rem}
+.emoji-drop{display:none;position:absolute;top:calc(100% + .3rem);left:0;z-index:600;
+  background:var(--bg2);border:1px solid var(--b1);border-radius:12px;
+  padding:.5rem;width:280px;box-shadow:var(--sh)}
+.emoji-drop.open{display:block;animation:tdin .15s ease}
+.emoji-search{width:100%;padding:.4rem .6rem;background:var(--bg3);border:1px solid var(--b2);
+  border-radius:7px;font-size:.85rem;color:var(--so);margin-bottom:.4rem;font-family:'Outfit',sans-serif}
+.emoji-search:focus{outline:none;border-color:var(--ac)}
+.emoji-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;max-height:180px;overflow-y:auto}
+.emoji-btn{background:transparent;border:none;cursor:pointer;font-size:1.2rem;padding:.25rem;border-radius:5px;transition:background .1s;line-height:1}
+.emoji-btn:hover{background:var(--bg3)}
+/* Datetime picker */
+.dt-wrap{display:flex;gap:.4rem}
+.dt-date{flex:1.4}.dt-time{flex:1}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hiyerarşi Şeması -->
+{% if not events %}
+<!-- ══ BOŞ EKRAN — YENİ BAŞLANGIYORSA ══ -->
+<div style="max-width:680px;margin:0 auto;padding:1rem 0">
+  <div style="text-align:center;padding:2rem 0 1.5rem">
+    <img src="/static/logo.png" alt="ALEV" style="height:80px;width:auto;margin-bottom:.75rem;filter:drop-shadow(0 0 16px rgba(245,158,11,.4))">
+    {% if lang=='tr' %}
+    <h1 style="font-size:1.8rem;font-weight:900;color:var(--wh)">{{ brand.name }}'e Hoş Geldiniz</h1>
+    <div style="font-size:.88rem;color:var(--mu);font-family:'DM Mono',monospace;margin-top:.35rem">Adaptive Live Event Venue for Telegram</div>
+    {% else %}
+    <h1 style="font-size:1.8rem;font-weight:900;color:var(--wh)">Welcome to {{ brand.name }}</h1>
+    <div style="font-size:.88rem;color:var(--mu);font-family:'DM Mono',monospace;margin-top:.35rem">Adaptive Live Event Venue for Telegram</div>
+    {% endif %}
+  </div>
+  <div class="tip-box">
+    <strong>Nasıl başlarım?</strong> Aşağıdaki adımları sırayla izleyin.
+    Her etkinlik kendi bağımsız yapısına sahiptir — nitelikler, roller, senaryolar ve {{ t.events.teams_count }}lar etkinliğe özeldir.
+  </div>
+  <div class="wizard-steps">
+    <div class="wstep active"><div class="wsdot">1</div><span class="wslabel">{{ t.events.wizard_step1 }}</span></div>
+    <div class="wstep"><div class="wsdot">2</div><span class="wslabel">{{ t.events.wizard_step2 }}</span></div>
+    <div class="wstep"><div class="wsdot">3</div><span class="wslabel">{{ t.events.wizard_step3 }}</span></div>
+    <div class="wstep"><div class="wsdot">4</div><span class="wslabel">{{ t.events.wizard_step4 }}</span></div>
+    <div class="wstep"><div class="wsdot">5</div><span class="wslabel">{{ t.events.wizard_step5 }}</span></div>
+  </div>
+  <div class="card" style="text-align:center;padding:2.5rem">
+    <div style="font-size:1.5rem;margin-bottom:.5rem">🎯</div>
+    <div style="font-weight:700;color:var(--wh);font-size:1rem;margin-bottom:.35rem">{{ t.events.no_events }}</div>
+    <div style="font-size:.85rem;color:var(--mu);margin-bottom:1.5rem">{{ t.events.no_events_desc }}</div>
+    <button type="button" class="btn bp" onclick="openModal('new-event-modal')">+ {{ t.events.create }}</button>
+  </div>
+</div>
+
+{% else %}
+<!-- ══ ETKİNLİK LİSTESİ ══ -->
+<div class="fxc jb mb3" style="flex-wrap:wrap;gap:1rem">
+  <div>
+    <h1 style="font-size:1.5rem;font-weight:800;color:var(--wh)">Etkinlikler</h1>
+    <div style="font-size:.8rem;font-family:'DM Mono',monospace;color:var(--mu)">
+      {{ events|length }} etkinlik · {% if active_event %}<span style="color:var(--ok)">{{ active_event.name }} aktif</span>{% else %}<span style="color:var(--mu)">aktif etkinlik yok</span>{% endif %}
+    </div>
+  </div>
+  <button type="button" class="btn bp bsm" onclick="openModal('new-event-modal')">+ {{ t.events.new }}</button>
+</div>
+
+{% if not active_event %}
+<div class="tip-box" style="margin-bottom:1.5rem">
+  <strong>⚡ İpucu:</strong> {{ t.events.active_hint }}
+</div>
+{% endif %}
+
+<div class="g3">
+{% for ev in events %}
+<div class="ev-card {% if ev.status=='active' %}active-ev{% endif %}">
+  <div class="ev-card-head">
+    <div class="fxc jb mb1">
+      <div class="fxc gap">
+        <span class="ev-status-dot {{ ev.status }}"></span>
+        <span class="bdg {% if ev.status=='active' %}bac{% elif ev.status=='ended' %}bmu{% elif ev.status=='paused' %}bin2{% else %}bmu{% endif %}">
+          {{ ev.status }}
+        </span>
+      </div>
+      <span style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--mu)">{{ ev.slug }}</span>
+    </div>
+    <div style="font-weight:800;color:var(--wh);font-size:1rem">{{ ev.name }}</div>
+    {% if ev.description %}
+    <div style="font-size:.82rem;color:var(--di);margin-top:.2rem;line-height:1.4">
+      {{ ev.description[:80] }}{% if ev.description|length > 80 %}…{% endif %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="ev-card-body">
+    <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.85rem">
+      <span class="bdg bmu">{{ ev.team_count or 0 }} {{ t.events.teams_count }}</span>
+      <span class="bdg bmu">{{ ev.scenario_count or 0 }} {{ t.event_detail.scenarios }}</span>
+    </div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+      <a href="/admin/events/{{ ev.id }}" class="btn bp bsm">{{ t.events.manage }}</a>
+      {% if ev.status != 'active' %}
+      <button type="button" class="btn bok_ bsm" onclick="doActivateEvent({{ ev.id }})">{{ t.events.activate }}</button>
+      {% else %}
+      <button type="button" class="btn ber_ bsm" onclick="doPauseEvent({{ ev.id }})">{{ t.events.pause }}</button>
+      {% endif %}
+      <button type="button" class="btn bg_ bsm" onclick="doDeleteEvent({{ ev.id }},'{{ ev.name|replace("'","\\'") }}')">🗑 {{ t.common.delete }}</button>
+    </div>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+
+<div id="hierarchy-schema" style="background:var(--bg2);border:1px solid var(--b1);border-radius:16px;padding:1.5rem;margin-top:2rem;margin-bottom:1rem">
+  <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--mu);margin-bottom:1.25rem;font-family:'DM Mono',monospace">
+    {{ t.events.hierarchy_title }}
+  </div>
+  <div class="hier-desktop" style="display:flex;align-items:center;gap:0">
+    <div style="flex:0 0 auto;text-align:center">
+      <div style="background:var(--ac);color:#0d0e0f;border-radius:10px;padding:.6rem .9rem;font-weight:800;font-size:.85rem;white-space:nowrap">🎯 {{ t.hierarchy.event }}</div>
+      <div style="font-size:.65rem;color:var(--mu);margin-top:.3rem;font-family:'DM Mono',monospace">{{ t.hierarchy.event_desc }}</div>
+    </div>
+    <div style="flex:1;height:2px;background:linear-gradient(90deg,var(--ac),var(--b2));min-width:12px"></div>
+    <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:.4rem">
+      <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .75rem;font-size:.78rem;font-weight:600;color:var(--so);white-space:nowrap">✦ {{ t.hierarchy.attributes }}</div>
+      <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .75rem;font-size:.78rem;font-weight:600;color:var(--so);white-space:nowrap">⚔ {{ t.hierarchy.roles }}</div>
+    </div>
+    <div style="flex:1;height:2px;background:var(--b1);min-width:12px"></div>
+    <div style="flex:0 0 auto;text-align:center">
+      <div style="background:var(--bg3);border:1.5px solid var(--in);border-radius:8px;padding:.45rem .75rem;font-size:.78rem;font-weight:600;color:var(--in);white-space:nowrap">◈ {{ t.hierarchy.scenario }}</div>
+    </div>
+    <div style="flex:1;height:2px;background:var(--b1);min-width:12px"></div>
+    <div style="flex:0 0 auto;text-align:center">
+      <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .75rem;font-size:.78rem;font-weight:600;color:var(--so);white-space:nowrap">◻ {{ t.hierarchy.tasks }}</div>
+    </div>
+    <div style="flex:1;height:2px;background:var(--b1);min-width:12px"></div>
+    <div style="flex:0 0 auto;text-align:center">
+      <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .75rem;font-size:.78rem;font-weight:600;color:var(--so);white-space:nowrap">◑ {{ t.hierarchy.teams }}</div>
+    </div>
+    <div style="flex:1;height:2px;background:var(--b1);min-width:12px"></div>
+    <div style="flex:0 0 auto;text-align:center">
+      <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .75rem;font-size:.78rem;font-weight:600;color:var(--so);white-space:nowrap">👤 {{ t.hierarchy.members }}</div>
+    </div>
+  </div>
+  <div class="hier-mobile" style="display:none;flex-direction:column;gap:0">
+    <div style="background:var(--ac);color:#0d0e0f;border-radius:10px;padding:.6rem 1rem;font-weight:800;font-size:.85rem;text-align:center">🎯 {{ t.hierarchy.event }}</div>
+    <div style="width:2px;height:14px;background:linear-gradient(180deg,var(--ac),var(--b2));margin:0 auto"></div>
+    <div style="display:flex;gap:.5rem">
+      <div style="flex:1;background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .65rem;font-size:.78rem;font-weight:600;color:var(--so);text-align:center">✦ {{ t.hierarchy.attributes }}</div>
+      <div style="flex:1;background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .65rem;font-size:.78rem;font-weight:600;color:var(--so);text-align:center">⚔ {{ t.hierarchy.roles }}</div>
+    </div>
+    <div style="width:2px;height:14px;background:var(--b1);margin:0 auto"></div>
+    <div style="background:var(--bg3);border:1.5px solid var(--in);border-radius:8px;padding:.45rem 1rem;font-size:.78rem;font-weight:600;color:var(--in);text-align:center">◈ {{ t.hierarchy.scenario }}</div>
+    <div style="width:2px;height:14px;background:var(--b1);margin:0 auto"></div>
+    <div style="background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem 1rem;font-size:.78rem;font-weight:600;color:var(--so);text-align:center">◻ {{ t.hierarchy.tasks }}</div>
+    <div style="border-top:2px dashed var(--b2);margin-top:.85rem;padding-top:.85rem;display:flex;gap:.5rem">
+      <div style="flex:1;background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .65rem;font-size:.78rem;font-weight:600;color:var(--so);text-align:center">◑ {{ t.hierarchy.teams }}</div>
+      <div style="flex:1;background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:.45rem .65rem;font-size:.78rem;font-weight:600;color:var(--so);text-align:center">👤 {{ t.hierarchy.members }}</div>
+    </div>
+  </div>
+  <style>.hier-desktop{display:none !important}.hier-mobile{display:flex !important}</style>
+</div>
+
+{% endif %}
+
+<!-- ══ YENİ ETKİNLİK MODAL ══ -->
+<div class="mbg" id="new-event-modal">
+<div class="modal" style="max-width:600px">
+  <div class="mtitle">🎯 {{ t.events.create }}</div>
+  <div style="background:var(--bg3);border-radius:8px;padding:.65rem .85rem;font-size:.82rem;color:var(--di);margin-bottom:1.25rem">
+    {{ t.events.create_hint }}
+  </div>
+  <div class="frow c2">
+    <div class="fg">
+      <label class="fl">{{ t.events.event_name }} *</label>
+      <input class="fi" id="ev-name" placeholder="Sürdürülebilirlik Hackathon 2025" autofocus>
+    </div>
+    <div class="fg">
+      <label class="fl">{{ t.events.slug }} *</label>
+      <input class="fi" id="ev-slug" placeholder="hackathon-2025">
+      <div class="fh">{{ t.events.slug_hint }}</div>
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">{{ t.events.join_open }}lama</label>
+    <textarea class="ft" id="ev-desc" rows="2" placeholder="Etkinlik hakkında kısa bir açıklama..."></textarea>
+  </div>
+  <div class="frow c2">
+    <div class="fg">
+      <label class="fl">{{ t.events.start_date }}</label>
+      <div class="dt-wrap">
+        <input class="fi dt-date" type="date" id="ev-start-date">
+        <input class="fi dt-time" type="time" id="ev-start-time" value="09:00">
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">{{ t.events.end_date }}</label>
+      <div class="dt-wrap">
+        <input class="fi dt-date" type="date" id="ev-end-date">
+        <input class="fi dt-time" type="time" id="ev-end-time" value="18:00">
+      </div>
+    </div>
+  </div>
+  <div class="frow c3">
+    <div class="fg">
+      <label class="fl">{{ t.events.max_teams }}</label>
+      <input class="fi" type="number" id="ev-maxteams" value="20" min="1">
+    </div>
+    <div class="fg">
+      <label class="fl">{{ t.events.max_members }}</label>
+      <input class="fi" type="number" id="ev-maxmembers" value="6" min="1">
+    </div>
+    <div class="fg">
+      <label class="fl">Katılım</label>
+      <select class="fs" id="ev-joinmode">
+        <option value="code">{{ t.events.join_code }}</option>
+        <option value="open">{{ t.events.join_open }}</option>
+        <option value="approval">{{ t.events.join_approval }}</option>
+      </select>
+    </div>
+  </div>
+  <div class="mfoot">
+    <button type="button" class="btn bg_ bsm" onclick="closeModal('new-event-modal')">{{ t.common.cancel }}</button>
+    <button type="button" class="btn bp bsm" onclick="submitNewEvent()">{{ t.common.save }}</button>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Slug otomatik
+document.getElementById('ev-name').addEventListener('input',function(){
+  var s=this.value.toLowerCase()
+    .replace(/\s+/g,'-')
+    .replace(/[^a-z0-9-]/g,'')
+    .replace(/-+/g,'-');
+  document.getElementById('ev-slug').value=s;
+});
+
+function getDatetime(dateId,timeId){
+  var d=document.getElementById(dateId).value;
+  var t=document.getElementById(timeId).value;
+  if(!d) return null;
+  return d+'T'+(t||'00:00')+':00';
+}
+
+async function submitNewEvent(){
+  var name=document.getElementById('ev-name').value.trim();
+  var slug=document.getElementById('ev-slug').value.trim();
+  if(!name||!slug){toast('Ad ve slug gerekli','e');return}
+  var r=await apiFetch('POST','/api/events',{
+    name:name, slug:slug,
+    description:document.getElementById('ev-desc').value,
+    max_teams:parseInt(document.getElementById('ev-maxteams').value)||20,
+    max_members_per_team:parseInt(document.getElementById('ev-maxmembers').value)||6,
+    join_mode:document.getElementById('ev-joinmode').value,
+    start_at:getDatetime('ev-start-date','ev-start-time'),
+    end_at:getDatetime('ev-end-date','ev-end-time'),
+    status:'draft'
+  });
+  if(r&&r.ok){
+    toast('✓ Etkinlik oluşturuldu! Yönetim sayfasına yönlendiriliyorsunuz...','s');
+    setTimeout(function(){window.location='/admin/events/'+r.event.id},900);
+  } else {
+    toast((r&&r.error)||'Hata oluştu','e');
+  }
+}
+
+async function doDeleteEvent(id, name){
+  if(!confirm('"' + name + '" etkinliği silinsin mi? Bu işlem geri alınamaz!')) return;
+  var r = await apiFetch('DELETE', '/api/events/' + id);
+  if(r && r.ok){ toast('✓ Etkinlik silindi', 's'); setTimeout(function(){ location.reload() }, 700); }
+  else toast((r && r.error) || 'Hata', 'e');
+}
+
+async function doActivateEvent(id){
+  if(!confirm('Bu etkinliği aktifleştir? Diğer aktif etkinlikler duraklatılacak.'))return;
+  var r=await apiFetch('POST','/api/events/'+id+'/activate');
+  if(r&&r.ok){toast('✓ Etkinlik aktifleştirildi','s');setTimeout(function(){location.reload()},700)}
+  else toast('Hata','e');
+}
+
+async function doPauseEvent(id){
+  if(!confirm('Etkinliği duraklat?'))return;
+  var ev=await apiFetch('GET','/api/events/'+id);
+  if(!ev||!ev.id)return;
+  var r=await apiFetch('PUT','/api/events/'+id,Object.assign({},ev,{status:'paused'}));
+  if(r&&r.ok){toast('Duraklatıldı','w');setTimeout(function(){location.reload()},700)}
+}
+</script>
+
+{% endblock %}

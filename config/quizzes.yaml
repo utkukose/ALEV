@@ -1,0 +1,119 @@
+# ─────────────────────────────────────────────────────────
+# ALEV v2 — Quiz Tanımları
+# Her quiz seti birden fazla soru içerebilir.
+# Bot grupta Telegram'ın native Quiz Poll'unu kullanır.
+# Doğru cevap = xp_reward XP
+# ─────────────────────────────────────────────────────────
+
+quiz_sets:
+  - id: "iklim_temelleri"
+    title_tr: "İklim Temelleri Quiz"
+    title_en: "Climate Basics Quiz"
+    cooldown_minutes: 120       # Aynı kullanıcı 2 saat sonra tekrar oynayabilir
+
+    questions:
+      - id: "q1_karbon"
+        text_tr: "🌍 Küresel ısınmanın temel nedeni nedir?"
+        text_en: "🌍 What is the primary cause of global warming?"
+        options_tr:
+          - "Güneş aktivitesi artışı"
+          - "Sera gazı emisyonları"
+          - "Ozon tabakası incelmesi"
+          - "Volkanik aktivite"
+        options_en:
+          - "Increased solar activity"
+          - "Greenhouse gas emissions"
+          - "Ozone layer thinning"
+          - "Volcanic activity"
+        correct_index: 1
+        xp_reward: 50
+        explanation_tr: "CO₂ ve metan gibi sera gazları güneş ısısını atmosferde hapseder."
+        explanation_en: "Greenhouse gases like CO₂ and methane trap solar heat in the atmosphere."
+
+      - id: "q2_burdur"
+        text_tr: "💧 Burdur Gölü hangi tehlikeyle karşı karşıya?"
+        text_en: "💧 What threat does Lake Burdur face?"
+        options_tr:
+          - "Tuzlanma"
+          - "Kirlilik"
+          - "Çekilme ve kuruma"
+          - "Taşkın"
+        options_en:
+          - "Salinization"
+          - "Pollution"
+          - "Shrinkage and drying"
+          - "Flooding"
+        correct_index: 2
+        xp_reward: 75
+        explanation_tr: "Burdur Gölü son 40 yılda yaklaşık yarı boyutuna küçüldü."
+        explanation_en: "Lake Burdur has shrunk to roughly half its size over the past 40 years."
+
+      - id: "q3_yenilenebilir"
+        text_tr: "⚡ Türkiye'nin en büyük yenilenebilir enerji kaynağı hangisidir?"
+        text_en: "⚡ What is Turkey's largest renewable energy source?"
+        options_tr:
+          - "Güneş enerjisi"
+          - "Rüzgar enerjisi"
+          - "Hidroelektrik"
+          - "Jeotermal"
+        options_en:
+          - "Solar energy"
+          - "Wind energy"
+          - "Hydroelectric"
+          - "Geothermal"
+        correct_index: 2
+        xp_reward: 50
+        explanation_tr: "Hidroelektrik, Türkiye'nin yenilenebilir enerji üretiminin büyük bölümünü oluşturur."
+        explanation_en: "Hydroelectric accounts for the largest share of Turkey's renewable energy."
+
+  - id: "hizli_tur"
+    title_tr: "Hızlı Tur (3 Soru)"
+    title_en: "Quick Round (3 Questions)"
+    cooldown_minutes: 30
+
+    questions:
+      - id: "hr_q1"
+        text_tr: "🌱 Karbon ayak izi neyi ölçer?"
+        text_en: "🌱 What does carbon footprint measure?"
+        options_tr:
+          - "Ayakkabı boyutunu"
+          - "CO₂ emisyon miktarını"
+          - "Orman alanını"
+          - "Su tüketimini"
+        options_en:
+          - "Shoe size"
+          - "Amount of CO₂ emissions"
+          - "Forest area"
+          - "Water consumption"
+        correct_index: 1
+        xp_reward: 30
+        explanation_tr: ""
+        explanation_en: ""
+
+      - id: "hr_q2"
+        text_tr: "♻️ Hangi malzeme sonsuz kez geri dönüştürülebilir?"
+        text_en: "♻️ Which material can be recycled infinitely?"
+        options_tr:
+          - "Plastik"
+          - "Kağıt"
+          - "Cam"
+          - "Kumaş"
+        options_en:
+          - "Plastic"
+          - "Paper"
+          - "Glass"
+          - "Fabric"
+        correct_index: 2
+        xp_reward: 30
+        explanation_tr: "Cam, kalite kaybı olmaksızın sonsuz kez geri dönüştürülebilir."
+        explanation_en: "Glass can be recycled indefinitely without quality loss."
+
+      - id: "hr_q3"
+        text_tr: "🌊 Paris Anlaşması hangi yıl imzalandı?"
+        text_en: "🌊 In what year was the Paris Agreement signed?"
+        options_tr: ["2009", "2012", "2015", "2018"]
+        options_en: ["2009", "2012", "2015", "2018"]
+        correct_index: 2
+        xp_reward: 40
+        explanation_tr: "Paris Anlaşması Aralık 2015'te COP21 kapsamında imzalandı."
+        explanation_en: "The Paris Agreement was signed in December 2015 at COP21."

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="{{ lang|default('tr') }}" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ brand.name }} — {% if lang=='tr' %}Katılım{% else %}Join{% endif %}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('alev-theme')||'dark';document.documentElement.setAttribute('data-theme',t)})();</script>
+<style>
+:root,[data-theme=dark]{--bg:#0d0e0f;--bg2:#141618;--bg3:#1c1f22;--b1:#2e3438;--b2:#3d444b;--mu:#5a6370;--di:#8a95a0;--so:#c4cdd6;--wh:#f0f4f8;--ac:#f59e0b;--acd:#d97706;--acl:rgba(245,158,11,.12);--ok:#10b981;--er:#ef4444;--in:#3b82f6;--sh:0 8px 32px rgba(0,0,0,.45);--gl:0 0 0 3px rgba(245,158,11,.22)}
+[data-theme=light]{--bg:#f0f4f8;--bg2:#fff;--bg3:#e8edf2;--b1:#c8d0db;--mu:#7a8899;--so:#2a3545;--wh:#111820;--ac:#d97706;--acl:rgba(217,119,6,.1);--ok:#059669;--er:#dc2626;--in:#2563eb;--sh:0 4px 16px rgba(0,0,0,.1);--gl:0 0 0 3px rgba(217,119,6,.2)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:17px;-webkit-font-smoothing:antialiased}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--so);min-height:100vh}
+@keyframes gp{0%,100%{box-shadow:0 0 8px var(--ac)}50%{box-shadow:0 0 3px var(--ac)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* Layout */
+.page{display:grid;grid-template-columns:1fr 440px;min-height:100vh;max-width:1100px;margin:0 auto;gap:0}
+@media(max-width:760px){.page{grid-template-columns:1fr}.left-panel{display:none}}
+
+/* Sol panel - etkinlik bilgisi */
+.left-panel{padding:3rem 2.5rem;border-right:1px solid var(--b1);display:flex;flex-direction:column;gap:1.5rem;animation:fadeUp .4s ease}
+.brand-row{display:flex;align-items:center;gap:.5rem}
+.brand-dot{width:9px;height:9px;border-radius:50%;background:var(--ac);box-shadow:0 0 8px var(--ac);animation:gp 2s infinite}
+.brand-name{font-weight:900;font-size:1.1rem;color:var(--wh);letter-spacing:.06em;text-transform:uppercase}
+.event-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .7rem;border-radius:20px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:var(--ok);font-size:.72rem;font-weight:700;font-family:'DM Mono',monospace}
+.event-title{font-size:1.8rem;font-weight:900;color:var(--wh);line-height:1.2}
+.event-desc{font-size:.92rem;color:var(--di);line-height:1.7}
+.info-card{background:var(--bg2);border:1px solid var(--b1);border-radius:12px;padding:1rem 1.25rem}
+.info-card-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--mu);font-family:'DM Mono',monospace;margin-bottom:.65rem}
+.info-row{display:flex;align-items:center;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--b1);font-size:.85rem}
+.info-row:last-child{border-bottom:none}
+.info-label{color:var(--mu);min-width:100px;font-size:.8rem}
+.info-val{color:var(--so);font-weight:500}
+.how-steps{list-style:none;counter-reset:step;display:flex;flex-direction:column;gap:.5rem}
+.how-step{counter-increment:step;display:flex;gap:.65rem;font-size:.85rem;color:var(--di);line-height:1.5}
+.how-step::before{content:counter(step);width:22px;height:22px;border-radius:50%;background:var(--acl);color:var(--ac);font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem}
+.tg-box{background:var(--acl);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:.85rem 1rem}
+.tg-title{font-size:.8rem;font-weight:700;color:var(--ac);margin-bottom:.4rem}
+.tg-cmd{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--so)}
+
+/* Sağ panel - form */
+.right-panel{padding:2.5rem 2rem;display:flex;flex-direction:column;animation:fadeUp .35s ease}
+.steps-bar{display:flex;gap:0;margin-bottom:2rem;position:relative}
+.steps-bar::before{content:'';position:absolute;top:13px;left:0;right:0;height:1.5px;background:var(--b1);z-index:0}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1}
+.step-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--b2);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--mu);margin-bottom:.25rem;transition:all .25s}
+.step-item.done .step-dot{border-color:var(--ok);background:var(--ok);color:#0d0e0f}
+.step-item.active .step-dot{border-color:var(--ac);background:var(--ac);color:#0d0e0f;box-shadow:0 0 10px rgba(245,158,11,.4)}
+.step-lbl{font-size:.6rem;font-family:'DM Mono',monospace;color:var(--mu);text-align:center}
+.step-item.active .step-lbl{color:var(--ac)}
+.step-item.done .step-lbl{color:var(--ok)}
+.section{display:none;animation:fadeUp .25s ease}.section.active{display:block}
+.fl{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:.38rem;font-family:'DM Mono',monospace}
+.fi,.fs{width:100%;padding:.65rem .9rem;background:var(--bg3);border:1.5px solid var(--b2);border-radius:9px;color:var(--so);font-size:.92rem;font-family:'Outfit',sans-serif;transition:all .18s;outline:none}
+.fi:focus,.fs:focus{border-color:var(--ac);box-shadow:var(--gl);color:var(--wh)}
+.fi::placeholder{color:var(--mu)}
+.fg{margin-bottom:.85rem}
+.fh{font-size:.7rem;color:var(--mu);margin-top:.3rem;font-family:'DM Mono',monospace}
+.btn{width:100%;padding:.72rem;border-radius:9px;font-size:.92rem;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;border:none;transition:all .18s;margin-top:.5rem}
+.btn-row{display:flex;gap:.5rem;margin-top:.5rem}
+.btn-row .btn{margin-top:0}
+.bp{background:var(--ac);color:#0d0e0f;box-shadow:0 2px 12px rgba(245,158,11,.25)}
+.bp:hover{background:var(--acd);transform:translateY(-1px)}
+.bp:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.bs{background:transparent;color:var(--so);border:1px solid var(--b2)}
+.bs:hover{background:var(--bg3)}
+.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);border-radius:9px;padding:.6rem .85rem;color:var(--er);font-size:.85rem;margin-bottom:.75rem;display:none}
+.ok-msg{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:9px;padding:.6rem .85rem;color:var(--ok);font-size:.85rem;margin-bottom:.75rem;display:none}
+.tgid-guide{background:var(--bg3);border-radius:10px;padding:.85rem 1rem;margin-bottom:.85rem}
+.tgid-guide-title{font-size:.75rem;font-weight:700;color:var(--wh);margin-bottom:.4rem}
+.tgid-step{display:flex;gap:.4rem;font-size:.8rem;color:var(--di);margin-bottom:.3rem}
+.tgid-step code{font-family:'DM Mono',monospace;background:var(--b1);padding:.05rem .3rem;border-radius:4px;color:var(--ac)}
+.char-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.char-card{background:var(--bg3);border:1.5px solid var(--b2);border-radius:10px;padding:.85rem;cursor:pointer;transition:all .18s;text-align:left}
+.char-card:hover{border-color:var(--ac)}
+.char-card.sel{border-color:var(--ac);background:var(--acl);box-shadow:0 0 12px rgba(245,158,11,.15)}
+.char-emoji{font-size:1.6rem;margin-bottom:.3rem}
+.char-name{font-weight:700;color:var(--wh);font-size:.88rem}
+.char-bonus{font-size:.7rem;font-family:'DM Mono',monospace;color:var(--mu);margin-top:.15rem}
+.char-attrs{font-size:.72rem;color:var(--di);margin-top:.25rem;line-height:1.4}
+.success-icon{font-size:3.5rem;text-align:center;animation:float 2s ease-in-out infinite;margin-bottom:.75rem}
+.cmd-list{background:var(--bg3);border-radius:10px;padding:.85rem 1rem;margin-top:.75rem}
+.cmd-item{display:flex;gap:.65rem;padding:.3rem 0;font-size:.83rem}
+.cmd-item code{font-family:'DM Mono',monospace;color:var(--ac);min-width:130px}
+.divider{border:none;border-top:1px solid var(--b1);margin:1.25rem 0}
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- SOL: Etkinlik bilgisi -->
+  <div class="left-panel">
+    <div class="brand-row">
+      <img src="/static/logo.png" alt="ALEV" style="height:72px;width:auto;object-fit:contain;filter:drop-shadow(0 0 8px rgba(245,158,11,.4))">
+      <span class="brand-name">{{ brand.name }}</span>
+    </div>
+
+    {% if event %}
+    <div>
+      <div class="event-badge" style="margin-bottom:.75rem">
+        {% if event.status=='active' %}🟢 {% if lang=='tr' %}Aktif{% else %}Active{% endif %}
+        {% else %}⏸ {{ event.status }}{% endif %}
+      </div>
+      <div class="event-title">{{ event.name }}</div>
+      {% if event.description %}
+      <div class="event-desc" style="margin-top:.6rem">{{ event.description }}</div>
+      {% endif %}
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">{% if lang=='tr' %}Etkinlik Bilgileri{% else %}Event Details{% endif %}</div>
+      {% if event.start_at %}
+      <div class="info-row">
+        <span class="info-label">📅 {% if lang=='tr' %}Başlangıç{% else %}Start{% endif %}</span>
+        <span class="info-val">{{ event.start_at[:16].replace('T',' ') }}</span>
+      </div>
+      {% endif %}
+      {% if event.end_at %}
+      <div class="info-row">
+        <span class="info-label">🏁 {% if lang=='tr' %}Bitiş{% else %}End{% endif %}</span>
+        <span class="info-val">{{ event.end_at[:16].replace('T',' ') }}</span>
+      </div>
+      {% endif %}
+      <div class="info-row">
+        <span class="info-label">👥 {% if lang=='tr' %}Takım Boyutu{% else %}Team Size{% endif %}</span>
+        <span class="info-val">{% if lang=='tr' %}Takım başına maks. {% else %}Max {% endif %}{{ event.max_members_per_team }} {% if lang=='tr' %}üye{% else %}members{% endif %}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">🎯 {% if lang=='tr' %}Katılım{% else %}Join Mode{% endif %}</span>
+        <span class="info-val">{% if event.join_mode=='code' %}{% if lang=='tr' %}Davet Koduyla{% else %}Invite Code{% endif %}{% else %}{{ event.join_mode }}{% endif %}</span>
+      </div>
+    </div>
+    {% else %}
+    <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);border-radius:10px;padding:1rem;color:var(--er)">
+      {% if lang=='tr' %}Şu an aktif etkinlik bulunmuyor.{% else %}No active event at the moment.{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="info-card">
+      <div class="info-card-title">{% if lang=='tr' %}Nasıl Katılırsınız?{% else %}How to Join?{% endif %}</div>
+      <ul class="how-steps">
+        <li class="how-step">{% if lang=='tr' %}Davet kodunuzu takım liderinizden alın{% else %}Get your invite code from your team leader{% endif %}</li>
+        <li class="how-step">{% if lang=='tr' %}Telegram ID'nizi öğrenin (<code style="font-family:'DM Mono';color:var(--ac)">@userinfobot</code>'a yazın){% else %}Find your Telegram ID (message <code style="font-family:'DM Mono';color:var(--ac)">@userinfobot</code>){% endif %}</li>
+        <li class="how-step">{% if lang=='tr' %}<b>Bir rol seçin</b> — rol, başlangıç niteliklerinizi ve görev bonuslarınızı belirler{% else %}<b>Pick a role</b> — it sets your starting attributes and task bonuses{% endif %}</li>
+        <li class="how-step">{% if lang=='tr' %}Aktif senaryo içindeki görevleri <code style="font-family:'DM Mono';color:var(--ac)">/tasks</code> ile görün{% else %}View active scenario tasks with <code style="font-family:'DM Mono';color:var(--ac)">/tasks</code>{% endif %}</li>
+        <li class="how-step">{% if lang=='tr' %}<code style="font-family:'DM Mono';color:var(--ac)">/submit ID LINK</code> ile görev gönderin, admin onaylasın, <b>BP</b> kazanın!{% else %}Submit with <code style="font-family:'DM Mono';color:var(--ac)">/submit ID LINK</code>, get admin approval, earn <b>SP</b>!{% endif %}</li>
+      </ul>
+    </div>
+
+    <!-- Tanıtım & Yardım -->
+    <div class="info-card" style="border-left:3px solid var(--ac)">
+      <div class="info-card-title">{% if lang=='tr' %}🎮 Sistem Nasıl Çalışır?{% else %}🎮 How the System Works{% endif %}</div>
+      {% if lang=='tr' %}
+      <div style="font-size:.83rem;color:var(--di);line-height:1.7">
+        <p style="margin-bottom:.6rem"><b style="color:var(--wh)">Senaryo & Görev:</b> Her etkinliğin bir veya birden fazla senaryosu olur. Görevler bu senaryolara bağlıdır; yalnızca <b>aktif senaryo</b> içindeki görevler görünür ve gönderilebilir.</p>
+        <p style="margin-bottom:.6rem"><b style="color:var(--wh)">Rol Zorunluluğu:</b> Görev göndermek için bir rol seçmiş olmanız <b>zorunludur</b>. Rolünüz başlangıç niteliklerinizi (Güç, Zeka vb.) ve belirli görev türlerindeki bonus çarpanınızı belirler. Rolünüzü <code style="font-family:'DM Mono';color:var(--ac)">/role_list</code> ile listeleyip <code style="font-family:'DM Mono';color:var(--ac)">/role NUM</code> ile seçebilirsiniz.</p>
+        <p style="margin-bottom:.6rem"><b style="color:var(--wh)">Puan (BP):</b> Göreviniz admin tarafından onaylandığında takımınıza ve size otomatik olarak <b>BP</b> eklenir. Rolünüz ile görevin nitelik bonusları eşleşirse daha fazla puan kazanırsınız.</p>
+        <p><b style="color:var(--wh)">Liderlik:</b> <code style="font-family:'DM Mono';color:var(--ac)">/scores</code> ile takımlar arasındaki sıralamayı, <code style="font-family:'DM Mono';color:var(--ac)">/profile</code> ile kişisel nitelik ve BP durumunuzu görebilirsiniz.</p>
+      </div>
+      {% else %}
+      <div style="font-size:.83rem;color:var(--di);line-height:1.7">
+        <p style="margin-bottom:.6rem"><b style="color:var(--wh)">Scenario & Tasks:</b> Each event has one or more scenarios. Tasks are linked to scenarios — only tasks inside the <b>active scenario</b> are visible and submittable.</p>
+        <p style="margin-bottom:.6rem"><b style="color:var(--wh)">Role Required:</b> You <b>must</b> have a role to submit tasks. Your role sets your starting attributes (Strength, Intelligence etc.) and bonus multipliers for certain task types. List roles with <code style="font-family:'DM Mono';color:var(--ac)">/role_list</code> and pick one with <code style="font-family:'DM Mono';color:var(--ac)">/role NUM</code>.</p>
+        <p style="margin-bottom:.6rem"><b style="color:var(--wh)">Scoring (SP):</b> When an admin approves your task, <b>SP</b> is automatically added to you and your team. If your role's attribute bonuses match the task's rewards, you earn extra SP.</p>
+        <p><b style="color:var(--wh)">Leaderboard:</b> Use <code style="font-family:'DM Mono';color:var(--ac)">/scores</code> to see team rankings and <code style="font-family:'DM Mono';color:var(--ac)">/profile</code> to check your personal attributes and SP.</p>
+      </div>
+      {% endif %}
+    </div>
+
+        <div class="tg-box">
+      <div class="tg-title">📱 {% if lang=='tr' %}Telegram Komutları{% else %}Telegram Commands{% endif %}</div>
+      {% if lang=='tr' %}
+      <div class="tg-cmd">/start — Durum & hoş geldin</div>
+      <div class="tg-cmd">/join KOD — Takıma katıl</div>
+      <div class="tg-cmd">/role_list — Rolleri listele</div>
+      <div class="tg-cmd">/role NUM — Rol seç</div>
+      <div class="tg-cmd">/scenarios — Senaryo listesi</div>
+      <div class="tg-cmd">/tasks — Aktif görevler</div>
+      <div class="tg-cmd">/submit ID LINK — Görev gönder</div>
+      <div class="tg-cmd">/profile — Kişisel profilim</div>
+      <div class="tg-cmd">/status — Takım durumu</div>
+      <div class="tg-cmd">/scores — Liderlik tablosu</div>
+      <div class="tg-cmd">/help — Tüm komutlar</div>
+      {% else %}
+      <div class="tg-cmd">/start — Status & welcome</div>
+      <div class="tg-cmd">/join CODE — Join a team</div>
+      <div class="tg-cmd">/role_list — List roles</div>
+      <div class="tg-cmd">/role NUM — Select role</div>
+      <div class="tg-cmd">/scenarios — Scenario list</div>
+      <div class="tg-cmd">/tasks — Active tasks</div>
+      <div class="tg-cmd">/submit ID LINK — Submit task</div>
+      <div class="tg-cmd">/profile — My profile</div>
+      <div class="tg-cmd">/status — Team status</div>
+      <div class="tg-cmd">/scores — Leaderboard</div>
+      <div class="tg-cmd">/help — All commands</div>
+      {% endif %}
+    </div>
+  
+    <!-- Geliştirici Bilgisi -->
+    <div style="margin-top:auto;padding-top:1.5rem;border-top:1px solid var(--b1);font-size:.68rem;color:var(--mu);line-height:1.7">
+      <div style="font-weight:700;color:var(--di);margin-bottom:.2rem">SDÜ Robotik ve İnovasyon Topluluğu (RİT)</div>
+      <div>Geliştirici: <a href="https://github.com/utkukose" target="_blank" style="color:var(--ac);text-decoration:none">Prof. Dr. Utku Köse</a></div>
+    </div>
+  </div>
+
+  <!-- SAĞ: Katılım formu -->
+  <div class="right-panel">
+    <h2 style="font-size:1.25rem;font-weight:800;color:var(--wh);margin-bottom:1.5rem">
+      {% if lang=='tr' %}Takıma Katıl{% else %}Join a Team{% endif %}
+    </h2>
+
+    <div class="steps-bar">
+      <div class="step-item active" id="s1"><div class="step-dot">1</div><span class="step-lbl">{% if lang=='tr' %}Kod{% else %}Code{% endif %}</span></div>
+      <div class="step-item" id="s2"><div class="step-dot">2</div><span class="step-lbl">{% if lang=='tr' %}Kimlik{% else %}ID{% endif %}</span></div>
+      <div class="step-item" id="s3"><div class="step-dot">3</div><span class="step-lbl">{% if lang=='tr' %}Rol{% else %}Role{% endif %}</span></div>
+      <div class="step-item" id="s4"><div class="step-dot">4</div><span class="step-lbl">{% if lang=='tr' %}Tamam!{% else %}Done!{% endif %}</span></div>
+    </div>
+
+    <!-- ADIM 1: Davet kodu -->
+    <div class="section active" id="sec1">
+      <div id="err1" class="err"></div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Davet Kodu{% else %}Invite Code{% endif %} *</label>
+        <input class="fi" id="code" maxlength="10" placeholder="ABC123"
+               style="font-size:1.5rem;text-align:center;letter-spacing:.2em;font-family:'DM Mono',monospace;text-transform:uppercase"
+               oninput="this.value=this.value.toUpperCase()" value="{{ invite_code }}">
+        <div class="fh">{% if lang=='tr' %}Takım liderinizden aldığınız 6 haneli kod{% else %}6-digit code from your team leader{% endif %}</div>
+      </div>
+      <button class="btn bp" onclick="checkCode()">{% if lang=='tr' %}Devam Et →{% else %}Continue →{% endif %}</button>
+    </div>
+
+    <!-- ADIM 2: Kimlik -->
+    <div class="section" id="sec2">
+      <div id="err2" class="err"></div>
+      <div id="team-preview" style="background:var(--bg3);border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem;display:none">
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);font-family:'DM Mono',monospace;margin-bottom:.4rem">{% if lang=='tr' %}Katılacağınız Takım{% else %}Team You Are Joining{% endif %}</div>
+        <div id="team-preview-content"></div>
+      </div>
+      <div class="tgid-guide">
+        <div class="tgid-guide-title">📱 {% if lang=='tr' %}Telegram ID Nasıl Bulunur?{% else %}How to Find Telegram ID?{% endif %}</div>
+        <div class="tgid-step"><code>@userinfobot</code>{% if lang=='tr' %}'u Telegram'da açın{% else %} on Telegram{% endif %}</div>
+        <div class="tgid-step">{% if lang=='tr' %}<code>/start</code> gönderin → ID numaranızı gösterir{% else %}Send <code>/start</code> → it shows your ID{% endif %}</div>
+        <div class="tgid-step">{% if lang=='tr' %}Rakamları aşağıya yapıştırın{% else %}Paste the numbers below{% endif %}</div>
+      </div>
+      <div class="fg">
+        <label class="fl">Telegram ID *</label>
+        <input class="fi" id="tgid" type="number" placeholder="123456789">
+      </div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Ad Soyad{% else %}Display Name{% endif %} *</label>
+        <input class="fi" id="dispname" placeholder="{% if lang=='tr' %}Adınız Soyadınız{% else %}Your Name{% endif %}">
+      </div>
+      <div class="fg">
+        <label class="fl">{% if lang=='tr' %}Telegram Kullanıcı Adı{% else %}Telegram Username{% endif %}</label>
+        <input class="fi" id="username" placeholder="@username ({% if lang=='tr' %}opsiyonel{% else %}optional{% endif %})">
+      </div>
+      <div class="btn-row">
+        <button class="btn bs" onclick="goStep(1)">← {% if lang=='tr' %}Geri{% else %}Back{% endif %}</button>
+        <button class="btn bp" onclick="goStep3()">{% if lang=='tr' %}Devam Et →{% else %}Continue →{% endif %}</button>
+      </div>
+    </div>
+
+    <!-- ADIM 3: Rol seç -->
+    <div class="section" id="sec3">
+      <div id="err3" class="err"></div>
+      <div style="font-size:.85rem;color:var(--di);margin-bottom:.85rem;line-height:1.6">
+        {% if lang=='tr' %}Rolünü seç. Her rolün farklı başlangıç nitelikleri ve görev bonusları var.
+        Rolünü daha sonra Telegram'dan <code style="font-family:'DM Mono';color:var(--ac)">/rol</code> ile değiştirebilirsin.
+        {% else %}Pick your role. Each role has different starting attributes and task bonuses.
+        You can change it later with <code style="font-family:'DM Mono';color:var(--ac)">/role</code> on Telegram.{% endif %}
+      </div>
+      <div class="char-grid" id="char-grid">
+        <div style="grid-column:1/-1;text-align:center;color:var(--mu);padding:1rem;font-family:'DM Mono',monospace;font-size:.8rem">
+          {% if lang=='tr' %}Yükleniyor...{% else %}Loading...{% endif %}
+        </div>
+      </div>
+      <input type="hidden" id="selected-role-id">
+      <div id="no-roles-msg" style="display:none;text-align:center;padding:1rem;font-size:.85rem;color:var(--mu)">
+        {% if lang=='tr' %}Bu etkinlikte rol tanımlanmamış. Doğrudan katılabilirsiniz.{% else %}No roles defined. You can join directly.{% endif %}
+      </div>
+      <div class="btn-row" style="margin-top:1rem">
+        <button class="btn bs" onclick="goStep(2)">← {% if lang=='tr' %}Geri{% else %}Back{% endif %}</button>
+        <button class="btn bp" id="join-btn" onclick="doJoin()">{% if lang=='tr' %}Takıma Katıl! 🚀{% else %}Join Team! 🚀{% endif %}</button>
+      </div>
+    </div>
+
+    <!-- ADIM 4: Başarı -->
+    <div class="section" id="sec4">
+      <div class="success-icon">🎉</div>
+      <div style="text-align:center;margin-bottom:1.25rem">
+        <div style="font-size:1.3rem;font-weight:800;color:var(--wh);margin-bottom:.35rem">
+          {% if lang=='tr' %}Hoş Geldin!{% else %}Welcome aboard!{% endif %}
+        </div>
+        <div id="success-msg" style="font-size:.88rem;color:var(--di);line-height:1.6"></div>
+      </div>
+      <div class="cmd-list">
+        <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);font-family:'DM Mono',monospace;margin-bottom:.6rem">
+          {% if lang=='tr' %}Telegram Komutları{% else %}Telegram Commands{% endif %}
+        </div>
+        {% if lang=='tr' %}
+        <div class="cmd-item"><code>/scenarios</code><span>Senaryo listesi</span></div>
+        <div class="cmd-item"><code>/tasks</code><span>Aktif görevler</span></div>
+        <div class="cmd-item"><code>/submit ID LINK</code><span>Görev gönder</span></div>
+        <div class="cmd-item"><code>/profile</code><span>Profil ve BP</span></div>
+        <div class="cmd-item"><code>/status</code><span>Takım durumu</span></div>
+        <div class="cmd-item"><code>/scores</code><span>Liderlik tablosu</span></div>
+        <div class="cmd-item"><code>/role_list</code><span>Rolleri listele</span></div>
+        <div class="cmd-item"><code>/role NUM</code><span>Rol seç / değiştir</span></div>
+        <div class="cmd-item"><code>/help</code><span>Tüm komutlar</span></div>
+        {% else %}
+        <div class="cmd-item"><code>/scenarios</code><span>Scenario list</span></div>
+        <div class="cmd-item"><code>/tasks</code><span>Active tasks</span></div>
+        <div class="cmd-item"><code>/submit ID LINK</code><span>Submit a task</span></div>
+        <div class="cmd-item"><code>/profile</code><span>Profile & SP</span></div>
+        <div class="cmd-item"><code>/status</code><span>Team status</span></div>
+        <div class="cmd-item"><code>/scores</code><span>Leaderboard</span></div>
+        <div class="cmd-item"><code>/role_list</code><span>List roles</span></div>
+        <div class="cmd-item"><code>/role NUM</code><span>Select / change role</span></div>
+        <div class="cmd-item"><code>/help</code><span>All commands</span></div>
+        {% endif %}
+      </div>
+      <a href="/profile" class="btn bp" style="display:block;text-decoration:none;text-align:center;margin-top:1rem">
+        {% if lang=='tr' %}Profilime Git →{% else %}Go to My Profile →{% endif %}
+      </a>
+      <a href="/leaderboard" class="btn bs" style="display:block;text-decoration:none;text-align:center;margin-top:.5rem">
+        {% if lang=='tr' %}Liderlik Tablosu{% else %}Leaderboard{% endif %}
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+var _code='',_teamId=0,_eventId=0,_roles=[];
+var LNG='{{ lang }}';
+
+function err(n,msg){var el=document.getElementById('err'+n);if(el){el.textContent=msg;el.style.display=msg?'block':'none'}}
+
+function goStep(n){
+  [1,2,3,4].forEach(function(i){
+    document.getElementById('sec'+i).classList.toggle('active',i===n);
+    var s=document.getElementById('s'+i);
+    if(s){s.classList.toggle('done',i<n);s.classList.toggle('active',i===n)}
+  });
+  err(n,'');
+}
+
+async function checkCode(){
+  _code=document.getElementById('code').value.trim().toUpperCase();
+  if(!_code){err(1,LNG==='tr'?'Kod gerekli':'Code required');return}
+  var btn=event.target;btn.disabled=true;btn.textContent='...';
+  var r=await fetch('/api/teams/check-code/'+_code);
+  var d=await r.json();
+  btn.disabled=false;btn.textContent=LNG==='tr'?'Devam Et →':'Continue →';
+  if(!d.ok){err(1,d.error||(LNG==='tr'?'Gecersiz kod':'Invalid code'));return}
+  _teamId=d.team.id;_eventId=d.team.event_id;
+  var prev=document.getElementById('team-preview');
+  var cont=document.getElementById('team-preview-content');
+  if(prev&&cont){
+    cont.innerHTML='<div style="font-weight:700;color:var(--wh);font-size:1rem">'+escapeHtml(d.team.role_emoji||'⚔')+' '+escapeHtml(d.team.name)+'</div>'
+      +'<div style="font-size:.75rem;font-family:\'DM Mono\',monospace;color:var(--mu);margin-top:.2rem">'
+      +d.team.member_count+' / '+d.team.max_members+' '+(LNG==='tr'?'uye':'members')+'</div>';
+    prev.style.display='block';
+  }
+  goStep(2);
+}
+
+async function goStep3(){
+  var tgid=document.getElementById('tgid').value.trim();
+  var name=document.getElementById('dispname').value.trim();
+  if(!tgid){err(2,LNG==='tr'?'Telegram ID gerekli':'Telegram ID required');return}
+  if(!name){err(2,LNG==='tr'?'Ad Soyad gerekli':'Display name required');return}
+  // Rolleri yukle
+  var r=await fetch('/api/events/'+_eventId+'/roles');
+  _roles=await r.json();
+  var grid=document.getElementById('char-grid');
+  var noRoles=document.getElementById('no-roles-msg');
+  if(!_roles||!_roles.length){
+    grid.innerHTML='';noRoles.style.display='block';
+  } else {
+    noRoles.style.display='none';
+    grid.innerHTML=_roles.map(function(r){
+      var name=escapeHtml(r.name||r.name_tr||'');
+      var attrs=r.base_attributes||{};
+      var attrStr=Object.entries(attrs).map(function(kv){return escapeHtml(kv[0])+': '+escapeHtml(String(kv[1]))}).join(', ');
+      var rid=parseInt(r.id)||0;
+      return '<div class="char-card" onclick="selChar('+rid+',this)">'  
+        +'<div class="char-emoji">'+escapeHtml(r.emoji||'⚔')+'</div>'
+        +'<div class="char-name">'+name+'</div>'
+        +(attrStr?'<div class="char-attrs">'+attrStr+'</div>':'')
+        +'</div>';
+    }).join('');
+  }
+  goStep(3);
+}
+
+function selChar(id,el){
+  document.querySelectorAll('.char-card').forEach(function(c){c.classList.remove('sel')});
+  el.classList.add('sel');
+  document.getElementById('selected-role-id').value=id;
+}
+
+function escapeHtml(s){
+  if(s==null||s===undefined)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+async function doJoin(){
+  var tgid=parseInt(document.getElementById('tgid').value);
+  var name=document.getElementById('dispname').value.trim();
+  var username=(document.getElementById('username').value||'').replace('@','');
+  var roleId=document.getElementById('selected-role-id').value;
+  if(!tgid||isNaN(tgid)){err(3,LNG==='tr'?'Geçerli bir Telegram ID giriniz':'Please enter a valid Telegram ID');return}
+  if(!name){err(3,LNG==='tr'?'Ad Soyad gerekli':'Display name required');return}
+  if(_roles.length>0&&!roleId){err(3,LNG==='tr'?'Lütfen bir rol seçiniz':'Please select a role');return}
+  var btn=document.getElementById('join-btn');btn.disabled=true;btn.textContent='...';
+  var body={telegram_id:tgid,display_name:name,username:username,role:'member'};
+  if(roleId)body.role_id=parseInt(roleId);
+  try{
+    var r=await fetch('/api/teams/'+_teamId+'/members',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      credentials:'include',body:JSON.stringify(body)
+    });
+    var d=await r.json();
+    btn.disabled=false;
+    btn.textContent=LNG==='tr'?'Takıma Katıl! 🚀':'Join Team! 🚀';
+    if(!d.ok){
+      var msg=LNG==='tr'?(d.error||'Hata oluştu'):(d.error_en||d.error||'An error occurred');
+      err(3,msg);return;
+    }
+    var role=_roles.find(function(ro){return ro.id===parseInt(roleId)});
+    var roleName=role?(role.emoji||'')+(role.name||role.name_tr||''):'';
+    document.getElementById('success-msg').innerHTML=
+      (LNG==='tr'?'Takıma katıldın!':'You joined the team!')+
+      (roleName?'<br>'+(LNG==='tr'?'Rolün: ':'Role: ')+escapeHtml(roleName):'');
+    localStorage.setItem('alev_tgid',tgid);
+    localStorage.setItem('alev_team',_teamId);
+    goStep(4);
+  }catch(e){
+    btn.disabled=false;
+    btn.textContent=LNG==='tr'?'Takıma Katıl! 🚀':'Join Team! 🚀';
+    err(3,LNG==='tr'?'Bağlantı hatası: '+e.message:'Connection error: '+e.message);
+  }
+}
+
+// Davet kodu URL'den geldiyse otomatik doldur
+(function(){
+  var code='{{ invite_code }}';
+  if(code&&code.length>0){
+    var el=document.getElementById('code');
+    if(el)el.value=code;
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+# ─────────────────────────────────────────────────────────
+# ALEV v2 — Grup & Bot Ekosistemi
+# Her grup kendi bot token'ı, görev seti ve liderlik
+# tablosuna sahip olabilir. Org grubu tüm gruplara yayın yapar.
+# ─────────────────────────────────────────────────────────
+
+ecosystem:
+  # Üst organizatör grubu — admin buradan tüm gruplara yayın yapar
+  org_group:
+    chat_id: 0                        # Telegram chat ID (negatif olabilir)
+    name: "ALEV Organizatör"
+    bot_token_env: "ALEV_BOT_TOKEN"   # .env'deki değişken adı
+    role: organizer
+
+  # Jüri grubu — özel oylama botu
+  jury_group:
+    chat_id: 0
+    name: "ALEV Jüri"
+    bot_token_env: "ALEV_JURY_BOT_TOKEN"
+    role: jury
+
+  # Takım grupları — her biri bağımsız bir yarışma alanı
+  team_groups:
+    - id: "group_a"
+      chat_id: 0
+      name: "Takım A Grubu"
+      bot_token_env: "ALEV_BOT_TOKEN"   # Aynı bot farklı gruplara hizmet edebilir
+      task_set: "default"               # tasks.yaml'daki hangi görev seti
+      leaderboard_scope: "local"        # local | global
+      active: true
+
+    - id: "group_b"
+      chat_id: 0
+      name: "Takım B Grubu"
+      bot_token_env: "ALEV_BOT_TOKEN"
+      task_set: "default"
+      leaderboard_scope: "local"
+      active: true
+
+    - id: "group_c"
+      chat_id: 0
+      name: "Takım C Grubu"
+      bot_token_env: "ALEV_BOT_TOKEN"
+      task_set: "default"
+      leaderboard_scope: "local"
+      active: true
+
+# Küresel skor = tüm grupların XP toplamı mı, yoksa ayrı mı?
+scoring:
+  global_leaderboard: true      # true = tüm takımlar tek tabloda
+  local_leaderboard: true       # true = her grup kendi tablosunu görür
+  cross_group_duel: true        # true = farklı gruplardan takımlar düello yapabilir

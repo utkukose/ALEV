@@ -1,0 +1,126 @@
+{% extends "shared/base.html" %}
+{% block title %}{% if lang=='tr' %}Liderlik Tablosu{% else %}Leaderboard{% endif %} — {{ brand.name }}{% endblock %}
+
+{% block extra_css %}
+.rank-card{background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:1rem 1.25rem;margin-bottom:.5rem;transition:all .15s}
+.rank-card:hover{border-color:var(--b2);transform:translateX(2px)}
+.rank-card.rank-1{border-top:2px solid #ffd700;background:linear-gradient(135deg,rgba(255,215,0,.05),var(--bg2))}
+.rank-card.rank-2{border-top:2px solid #c0c0c0}
+.rank-card.rank-3{border-top:2px solid #cd7f32}
+.rank-num{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:800;width:34px;text-align:center;flex-shrink:0}
+.rank-1 .rank-num{color:#ffd700}.rank-2 .rank-num{color:#c0c0c0}.rank-3 .rank-num{color:#cd7f32}
+.bp-bar{height:4px;background:var(--b1);border-radius:2px;overflow:hidden;flex:1;max-width:110px}
+.bp-fill{height:100%;background:linear-gradient(90deg,var(--ac),#f97316);border-radius:2px;transition:width .8s ease}
+.member-row{display:flex;align-items:center;gap:.5rem;padding:.25rem .4rem;font-size:.75rem;color:var(--mu);border-radius:6px}
+.member-row:hover{background:var(--bg3)}
+.members-collapse{display:none;margin-top:.5rem;padding:.4rem .5rem;background:var(--bg3);border-radius:8px;border:1px solid var(--b1)}
+.rank-card.expanded .members-collapse{display:block}
+@media(max-width:640px){
+  .rank-card{padding:.75rem .9rem}
+  .rank-num{font-size:.95rem;width:26px}
+  .bp-bar{display:none}
+  .member-row{padding:.2rem .3rem;font-size:.7rem}
+}
+{% endblock %}
+
+{% block content %}
+<div class="container" style="position:relative;z-index:1">
+  <div style="text-align:center;padding:2rem 0 1.5rem">
+    <h1 style="font-size:2rem;font-weight:900;color:var(--wh)">
+      {% if lang=='tr' %}Liderlik <span style="color:var(--ac)">Tablosu</span>{% else %}<span style="color:var(--ac)">Leader</span>board{% endif %}
+    </h1>
+    {% if event %}
+    <div style="font-size:.85rem;font-family:'DM Mono',monospace;color:var(--mu);margin-top:.35rem">
+      {{ event.name }} · <span class="bdg {% if event.status=='active' %}bac{% else %}bmu{% endif %}">{{ event.status }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+
+
+  {% if not teams %}
+  <div style="text-align:center;padding:3rem;color:var(--mu)">
+    <div style="font-size:2.5rem;margin-bottom:.75rem">🏆</div>
+    <div style="font-size:.95rem;font-weight:600;color:var(--so)">{% if lang=='tr' %}Henüz takım yok{% else %}No teams yet{% endif %}</div>
+  </div>
+  {% else %}
+  <div>
+    {% set max_bp = teams[0].xp if teams else 1 %}
+    {% for tm in teams %}
+    {% set bp = tm.xp or 0 %}
+    {% set pct = [(bp * 100 // [max_bp, 1]|max), 5]|max %}
+    <div class="rank-card rank-{{ loop.index }}" id="lb-{{ tm.id }}"
+         onclick="toggleMembers(this)" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:.9rem">
+        <div class="rank-num">
+          {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+        </div>
+        <div style="font-size:1.3rem;flex-shrink:0">{{ tm.role_emoji or '⚔' }}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;color:var(--wh);font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            {{ tm.name }}
+          </div>
+          <div style="font-size:.72rem;color:var(--mu);font-family:'DM Mono',monospace;margin-top:.1rem">
+            {{ tm.role_name or '—' }} ·
+            {{ tm.member_count }} {% if lang=='tr' %}üye{% else %}members{% endif %} ·
+            {{ tm.completed_tasks }} {% if lang=='tr' %}görev{% else %}tasks{% endif %}
+          </div>
+          <div style="display:flex;align-items:center;gap:.65rem;margin-top:.4rem">
+            <div class="bp-bar"><div class="bp-fill" style="width:{{ pct }}%"></div></div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:800;color:var(--ac)">
+            {{ "{:,}".format(bp) }}
+          </div>
+          <div style="font-size:.62rem;color:var(--mu);text-transform:uppercase;letter-spacing:.08em">BP</div>
+        </div>
+      </div>
+
+      <!-- Üye BP listesi (toggle ile açılır) -->
+      <div class="members-collapse">
+        <div style="font-size:.72rem;color:var(--mu);margin-bottom:.35rem;font-family:'DM Mono',monospace">
+          {% if lang=='tr' %}Üye BP Dağılımı{% else %}Member BP Breakdown{% endif %}
+        </div>
+        {% if tm.members %}
+          {% for m in tm.members %}
+          <div class="member-row">
+            <span style="color:var(--wh);font-weight:600">{{ m.display_name or m.username or '?' }}</span>
+            <span style="color:var(--mu)">·</span>
+            <span>{{ m.char_role_emoji or '' }} {{ m.char_role_name or '—' }}</span>
+            <span style="margin-left:auto;font-family:'DM Mono',monospace;color:var(--ac);font-weight:700">
+              {{ m.bp or 0 }} BP
+            </span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="font-size:.75rem;color:var(--mu);text-align:center;padding:.4rem">
+            {% if lang=='tr' %}Üye bilgisi yok{% else %}No member data{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+
+function toggleMembers(card){
+  card.classList.toggle('expanded');
+}
+// WebSocket canlı güncelleme
+try {
+  var wsLB = new WebSocket('ws://'+location.host+'/ws/public');
+  wsLB.onmessage = function(e){
+    var msg = JSON.parse(e.data);
+    if(msg.event==='leaderboard_update') location.reload();
+  };
+  setInterval(function(){if(wsLB.readyState===1) wsLB.send('ping')}, 25000);
+} catch(e) {}
+</script>
+{% endblock %}

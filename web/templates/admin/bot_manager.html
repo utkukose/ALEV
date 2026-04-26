@@ -1,0 +1,469 @@
+{% extends "shared/admin_base.html" %}
+{% block title %}{{ brand.name }} — Bot{% endblock %}
+{% block tbar_title %}{% if lang=='tr' %}Bot Yönetimi{% else %}Bot Management{% endif %}{% endblock %}
+
+{% block sidebar %}
+<div class="sbsec">{% if lang=='tr' %}Botlar{% else %}Bots{% endif %}</div>
+<a class="sblink on" href="/admin/bot_manager"><span class="sbico">◎</span>{% if lang=='tr' %}Bot Listesi{% else %}Bot List{% endif %}</a>
+<div class="sbsec">{% if lang=='tr' %}Yönetim{% else %}Management{% endif %}</div>
+<a class="sblink" href="/admin"><span class="sbico">⬡</span>Dashboard</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}
+.bcard{background:var(--bg2);border:1.5px solid var(--b1);border-radius:14px;padding:1.25rem;transition:border-color .2s}
+.bcard.st-online{border-color:rgba(16,185,129,.5);background:linear-gradient(135deg,rgba(16,185,129,.04),var(--bg2))}
+.bcard.st-offline{border-color:rgba(239,68,68,.4)}
+.bcard.st-polling{border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.04),var(--bg2))}
+.bcard.st-unconfigured{border-style:dashed;border-color:var(--b2)}
+.bcard.st-checking{border-color:var(--b2)}
+.addcard{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;cursor:pointer;gap:.5rem;border-style:dashed;border-color:var(--b2)}
+.addcard:hover{background:rgba(245,158,11,.05);border-color:var(--ac)}
+.bavatar{width:42px;height:42px;border-radius:10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.st-badge{font-size:.68rem;padding:.18rem .55rem;border-radius:5px;font-family:'DM Mono',monospace;font-weight:700;letter-spacing:.03em}
+.st-online .st-badge{background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+.st-polling .st-badge{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
+.st-offline .st-badge{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+.st-unconfigured .st-badge,.st-checking .st-badge{background:var(--bg3);color:var(--mu);border:1px solid var(--b1)}
+.info-row{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--di);font-family:'DM Mono',monospace;padding:.2rem 0}
+.info-row .lbl{color:var(--mu);min-width:72px}
+.info-row .val{color:var(--so);word-break:break-all}
+.info-row .val.ok{color:var(--ok)}
+.info-row .val.err{color:var(--er)}
+.info-row .val.warn{color:var(--ac)}
+.steps{display:flex;gap:0;margin-bottom:1.5rem;position:relative}
+.steps::before{content:'';position:absolute;top:12px;left:0;right:0;height:1.5px;background:var(--b1);z-index:0}
+.step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;z-index:1}
+.sdot{width:24px;height:24px;border-radius:50%;border:2px solid var(--b2);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--mu);margin-bottom:.25rem;transition:all .2s}
+.step.on .sdot{border-color:var(--ac);background:var(--ac);color:#0d0e0f}
+.step.done .sdot{border-color:var(--ok);background:var(--ok);color:#0d0e0f}
+.slabel{font-size:.6rem;color:var(--mu);text-align:center;font-family:'DM Mono',monospace}
+.step.on .slabel{color:var(--ac)}
+.scontent{display:none}.scontent.on{display:block}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:.38rem .6rem;border-radius:6px;background:var(--bg3);margin-bottom:.28rem;font-size:.82rem;gap:.5rem}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fxc jb" style="margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+  <div>
+    <h1 style="font-size:1.5rem;font-weight:800;color:var(--wh)">
+      {% if lang=='tr' %}Bot Yönetimi{% else %}Bot Management{% endif %}
+    </h1>
+    <div style="font-size:.78rem;font-family:'DM Mono',monospace;color:var(--mu);margin-top:.2rem">
+      @BotFather → /newbot → token → {% if lang=='tr' %}sisteme ekle{% else %}add to system{% endif %}
+    </div>
+  </div>
+  <button class="btn bg_ bsm" onclick="loadBots()">↻ {% if lang=='tr' %}Yenile{% else %}Refresh{% endif %}</button>
+</div>
+
+<!-- Açıklama kutusu -->
+<div style="background:var(--bg3);border:1px solid var(--b1);border-left:3px solid var(--ac);border-radius:8px;padding:.75rem 1rem;font-size:.85rem;color:var(--di);margin-bottom:1.5rem;line-height:1.7">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem 1.5rem">
+    <div>🤖 <strong style="color:var(--wh)">Webhook</strong> — {% if lang=='tr' %}Sunucu üzerinde HTTPS URL gerekli. Telegram mesajları direkt gelir.{% else %}Requires HTTPS URL on server. Telegram pushes messages directly.{% endif %}</div>
+    <div>🔄 <strong style="color:var(--wh)">Polling</strong> — {% if lang=='tr' %}URL gerekmez. Bot Telegram'ı kendisi sorgular (geliştirme ortamı için).{% else %}No URL needed. Bot polls Telegram (for dev environments).{% endif %}</div>
+  </div>
+</div>
+
+<div class="bgrid" id="bots-grid">
+  <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--mu)">
+    <div style="display:inline-block;width:22px;height:22px;border:2px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:.6rem"></div>
+    <div style="font-family:'DM Mono',monospace;font-size:.82rem">{% if lang=='tr' %}Botlar yükleniyor...{% else %}Loading bots...{% endif %}</div>
+  </div>
+</div>
+
+<!-- ── Kayıt/Kurulum Modal ── -->
+<div class="mbg" id="reg-modal">
+<div class="modal" style="max-width:540px">
+  <div class="mtitle" id="reg-mtitle">{% if lang=='tr' %}Bot Ekle{% else %}Add Bot {% endif %}</div>
+  <div class="steps">
+    <div class="step on" id="st1"><div class="sdot">1</div><span class="slabel">Token</span></div>
+    <div class="step" id="st2"><div class="sdot">2</div><span class="slabel">{% if lang=='tr' %}Doğrula{% else %}Verify{% endif %}</span></div>
+    <div class="step" id="st3"><div class="sdot">3</div><span class="slabel">{% if lang=='tr' %}Kurulum{% else %}Setup{% endif %}</span></div>
+    <div class="step" id="st4"><div class="sdot">✓</div><span class="slabel">{% if lang=='tr' %}Hazır{% else %}Ready{% endif %}</span></div>
+  </div>
+
+  <!-- Adım 1: Token -->
+  <div class="scontent on" id="sc1">
+    <input type="hidden" id="reg-gid">
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Grup / Bot Kimliği{% else %}Group / Bot ID{% endif %}</label>
+      <select class="fs" id="reg-gsel" onchange="document.getElementById('reg-gid').value=this.value"></select>
+    </div>
+    <div class="fg">
+      <label class="fl">Bot Token</label>
+      <input class="fi" id="reg-token" type="password" placeholder="1234567890:AAF_abc...">
+      <div class="fh">@BotFather → /newbot → {% if lang=='tr' %}tokenı buraya yapıştır{% else %}paste token here{% endif %}</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn bg_ bsm" onclick="closeModal('reg-modal')">{% if lang=='tr' %}İptal{% else %}Cancel{% endif %}</button>
+      <button class="btn bp bsm" onclick="doRegister()">{% if lang=='tr' %}Doğrula →{% else %}Verify →{% endif %}</button>
+    </div>
+  </div>
+
+  <!-- Adım 2: Doğrulama -->
+  <div class="scontent" id="sc2">
+    <div style="text-align:center;padding:2rem 0">
+      <div style="font-size:2.5rem;margin-bottom:.65rem" id="v-icon">⏳</div>
+      <div style="font-weight:700;color:var(--wh);font-size:.95rem" id="v-title">{% if lang=='tr' %}Doğrulanıyor...{% else %}Verifying...{% endif %}</div>
+      <div style="font-size:.8rem;color:var(--mu);font-family:'DM Mono',monospace;margin-top:.25rem" id="v-sub"></div>
+    </div>
+  </div>
+
+  <!-- Adım 3: Kurulum -->
+  <div class="scontent" id="sc3">
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:.9rem;margin-bottom:1.1rem;display:flex;gap:.75rem;align-items:center">
+      <div style="font-size:1.5rem">🤖</div>
+      <div>
+        <div style="font-weight:700;color:var(--wh)" id="s-name">—</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.74rem;color:var(--ac)" id="s-uname">—</div>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">{% if lang=='tr' %}Webhook URL (HTTPS){% else %}Webhook URL (HTTPS){% endif %}</label>
+      <input class="fi" id="s-url" placeholder="https://alev.example.com">
+      <div class="fh">
+        {% if lang=='tr' %}
+        <strong style="color:var(--ac)">Doldurmak zorunlu değil.</strong> Boş bırakırsanız bot polling modunda çalışır (geliştirme için yeterli).
+        Sunucu üzerindeyseniz ngrok veya reverse proxy ile HTTPS URL'i buraya girin.
+        {% else %}
+        <strong style="color:var(--ac)">Not required.</strong> Leave empty to run in polling mode (fine for development).
+        On a server, enter your HTTPS URL from ngrok or reverse proxy.
+        {% endif %}
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn bg_ bsm" onclick="closeModal('reg-modal')">{% if lang=='tr' %}Sonra{% else %}Later{% endif %}</button>
+      <button class="btn bp bsm" id="setup-btn" onclick="doSetup()">{% if lang=='tr' %}Kurulumu Tamamla 🚀{% else %}Complete Setup 🚀{% endif %}</button>
+    </div>
+  </div>
+
+  <!-- Adım 4: Sonuç -->
+  <div class="scontent" id="sc4">
+    <div style="text-align:center;padding:1rem 0 1.25rem">
+      <div style="font-size:2.5rem;margin-bottom:.5rem" id="final-icon">🎉</div>
+      <div style="font-weight:800;font-size:1.05rem;color:var(--wh)" id="final-title">{% if lang=='tr' %}Bot hazır!{% else %}Bot ready!{% endif %}</div>
+      <div style="font-size:.8rem;color:var(--mu);margin-top:.3rem" id="final-mode"></div>
+    </div>
+    <div id="setup-results" style="margin-bottom:.75rem"></div>
+    <div class="mfoot">
+      <div></div>
+      <button class="btn bp bsm" onclick="closeModal('reg-modal');loadBots()">OK</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── Gruplar Modal ── -->
+<div class="mbg" id="groups-modal">
+<div class="modal">
+  <div class="mtitle">{% if lang=='tr' %}Bot Grupları{% else %}Bot Groups{% endif %}</div>
+  <div id="groups-list"></div>
+  <div class="mfoot">
+    <div style="font-size:.72rem;color:var(--mu);font-family:'DM Mono',monospace;max-width:260px">
+      {% if lang=='tr' %}Chat ID'yi kopyalayıp takım Telegram Grup ID'si olarak kullanın{% else %}Copy chat ID and use as team Telegram Group ID{% endif %}
+    </div>
+    <button class="btn bg_ bsm" onclick="closeModal('groups-modal')">{% if lang=='tr' %}Kapat{% else %}Close{% endif %}</button>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var API='/api/bot';
+var LNG=document.documentElement.getAttribute('lang')||'tr';
+var curGid='';
+
+function goStep(n){
+  for(var i=1;i<=4;i++){
+    var sc=document.getElementById('sc'+i);
+    var st=document.getElementById('st'+i);
+    if(sc) sc.classList.toggle('on',i===n);
+    if(st){st.classList.toggle('on',i===n);st.classList.toggle('done',i<n)}
+  }
+}
+
+function renderBots(bots){
+  var grid=document.getElementById('bots-grid');
+  var stLabel={
+    online:  LNG==='tr'?'🟢 Webhook Aktif':'🟢 Webhook Active',
+    polling: LNG==='tr'?'🟡 Polling':'🟡 Polling',
+    offline: LNG==='tr'?'🔴 Çevrimdışı':'🔴 Offline',
+    unconfigured: LNG==='tr'?'⬜ Token Yok':'⬜ No Token',
+    checking: LNG==='tr'?'⏳ Kontrol...':'⏳ Checking...'
+  };
+
+  /* Grup selectini doldur */
+  var sel=document.getElementById('reg-gsel');
+  if(sel){
+    sel.innerHTML='<option value="">— '+(LNG==='tr'?'Grup seçin':'Select group')+' —</option>'+
+      bots.map(function(b){
+        return '<option value="'+b.group_id+'" data-env="'+b.token_env_key+'">'+b.group_name+'</option>';
+      }).join('');
+  }
+
+  var html=bots.map(function(b){
+    var st=b.status||(b.has_token?(b.webhook_url?'online':'polling'):'unconfigured');
+    var stCls='st-'+st;
+    var lbl=stLabel[st]||st;
+
+    /* Info satırları */
+    var infoRows='';
+    infoRows+='<div class="info-row"><span class="lbl">Bot:</span><span class="val '+(b.bot_username?'ok':'err')+'">'+(b.bot_username?'@'+b.bot_username:'—')+'</span></div>';
+    infoRows+='<div class="info-row"><span class="lbl">Mod:</span><span class="val '+(st==='online'?'ok':st==='polling'?'warn':'err')+'">'+(st==='online'?'Webhook':st==='polling'?'Polling':'—')+'</span></div>';
+    if(b.webhook_url){
+      var shortUrl=b.webhook_url.length>38?b.webhook_url.substring(0,38)+'…':b.webhook_url;
+      infoRows+='<div class="info-row"><span class="lbl">Webhook:</span><span class="val ok" title="'+b.webhook_url+'">'+shortUrl+'</span></div>';
+    }
+    if(b.bot_id){
+      infoRows+='<div class="info-row"><span class="lbl">ID:</span><span class="val">'+b.bot_id+'</span></div>';
+    }
+    if(b.event_id){
+      infoRows+='<div class="info-row"><span class="lbl">Etkinlik:</span><span class="val warn">ID:'+b.event_id+'</span></div>';
+    }
+
+    var actions='<div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.85rem">';
+    if(b.has_token){
+      actions+='<button class="btn bg_ bxs" onclick="openSetup(\''+b.group_id+'\',\''+b.bot_username+'\')" title="'+(LNG==='tr'?'Webhook/kurulum ayarla':'Configure webhook/setup')+'">⚙ '+(LNG==='tr'?'Kurulum':'Setup')+'</button>';
+      actions+='<button class="btn bg_ bxs" onclick="checkOne(\''+b.group_id+'\')" title="'+(LNG==='tr'?'Durumu yenile':'Refresh status')+'">↻</button>';
+      actions+='<button class="btn bg_ bxs" onclick="openGroupsM(\''+b.group_id+'\')">'+(LNG==='tr'?'Gruplar':'Groups')+'</button>';
+      actions+='<button class="btn ber_ bxs" onclick="deleteBot(\''+b.group_id+'\')" title="'+(LNG==='tr'?'Botu sil':'Delete bot')+'">✕</button>';
+    } else {
+      actions+='<button class="btn bp bxs" onclick="openReg(\''+b.group_id+'\',\''+b.token_env_key+'\')">🔑 '+(LNG==='tr'?'Token Ekle':'Add Token')+'</button>';
+    }
+    actions+='</div>';
+
+    return '<div class="bcard '+stCls+'" id="bc-'+b.group_id+'">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem">'+
+        '<div style="display:flex;gap:.6rem;align-items:center">'+
+          '<div class="bavatar">'+(b.is_org?'👑':'🤖')+'</div>'+
+          '<div>'+
+            '<div style="font-weight:700;color:var(--wh);font-size:.95rem">'+b.group_name+'</div>'+
+            '<div style="font-size:.7rem;font-family:\'DM Mono\',monospace;color:var(--mu);margin-top:.1rem">'+b.group_id+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<span class="st-badge">'+lbl+'</span>'+
+      '</div>'+
+      infoRows+
+      actions+
+    '</div>';
+  }).join('');
+
+  /* Yeni bot ekle kartı */
+  html+='<div class="bcard addcard" onclick="openReg()">'+
+    '<div style="font-size:1.75rem;color:var(--ac)">+</div>'+
+    '<div style="font-weight:600;font-size:.85rem;color:var(--di)">'+(LNG==='tr'?'Yeni Bot Ekle':'Add New Bot')+'</div>'+
+  '</div>';
+
+  grid.innerHTML=html;
+}
+
+async function loadBots(){
+  document.getElementById('bots-grid').innerHTML=
+    '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--mu)">'+
+    '<div style="display:inline-block;width:22px;height:22px;border:2px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:.5rem"></div>'+
+    '<div style="font-family:\'DM Mono\',monospace;font-size:.82rem">'+(LNG==='tr'?'Yükleniyor...':'Loading...')+'</div></div>';
+  try{
+    var r=await fetch(API);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    renderBots(await r.json());
+  }catch(e){
+    document.getElementById('bots-grid').innerHTML=
+      '<div style="grid-column:1/-1;padding:2rem;text-align:center;color:var(--er);font-size:.88rem">⚠ Error: '+e.message+'</div>';
+  }
+}
+
+async function checkOne(gid){
+  try{
+    var d=await fetch(API+'/'+gid+'/status').then(function(r){return r.json()});
+    var mode=d.webhook_url?'Webhook':'Polling';
+    var msg='@'+(d.username||gid)+' — '+d.status+' ('+mode+')';
+    if(d.webhook_url) msg+='\n'+d.webhook_url;
+    toast(msg,'i');
+    loadBots();
+  }catch(e){toast('Error: '+e.message,'e')}
+}
+
+async function deleteBot(gid){
+  if(!confirm(LNG==='tr'?'Bot silinsin mi?':'Delete this bot?')) return;
+  var r=await fetch(API+'/'+gid,{method:'DELETE'});
+  if((await r.json()).ok){toast(LNG==='tr'?'Silindi':'Deleted','s');loadBots();}
+  else toast('Error','e');
+}
+
+function openReg(gid,env){
+  gid=gid||''; env=env||'ALEV_BOT_TOKEN'; curGid=gid;
+  goStep(1);
+  document.getElementById('reg-gid').value=gid;
+  document.getElementById('reg-token').value='';
+  document.getElementById('reg-mtitle').textContent=LNG==='tr'?'Bot Ekle':'Add Bot';
+  var sel=document.getElementById('reg-gsel');
+  if(gid&&sel){for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===gid){sel.selectedIndex=i;break}}}
+  openModal('reg-modal');
+}
+
+function openSetup(gid,uname){
+  curGid=gid;
+  document.getElementById('reg-gid').value=gid;
+  document.getElementById('s-name').textContent=uname||gid;
+  document.getElementById('s-uname').textContent=uname?'@'+uname:'';
+  document.getElementById('reg-mtitle').textContent=(LNG==='tr'?'Kurulum — ':'Setup — ')+(uname||gid);
+  goStep(3);
+  openModal('reg-modal');
+}
+
+async function doRegister(){
+  var gid=document.getElementById('reg-gid').value||document.getElementById('reg-gsel').value;
+  var tok=document.getElementById('reg-token').value.trim();
+  if(!gid||!tok){toast(LNG==='tr'?'Grup ve token gerekli':'Group and token required','e');return}
+  curGid=gid;
+  goStep(2);
+  var vi=document.getElementById('v-icon'); var vt=document.getElementById('v-title'); var vs=document.getElementById('v-sub');
+  vi.textContent='⏳'; vt.textContent=LNG==='tr'?'Telegram\'a bağlanılıyor...':'Connecting to Telegram...'; vs.textContent='';
+  try{
+    var r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({group_id:gid,token_env_key:'ALEV_BOT_TOKEN',raw_token:tok})});
+    var d=await r.json();
+    if(d.ok){
+      vi.textContent='✅';
+      vt.textContent='@'+d.username+' ('+d.first_name+')';
+      vs.textContent='Bot ID: '+d.bot_id;
+      document.getElementById('s-name').textContent=d.first_name||d.username;
+      document.getElementById('s-uname').textContent='@'+d.username;
+      setTimeout(function(){goStep(3);},1000);
+    }else{
+      vi.textContent='❌';
+      vt.textContent=LNG==='tr'?'Doğrulama başarısız':'Verification failed';
+      vs.textContent=d.error||'';
+      setTimeout(function(){goStep(1);},2500);
+    }
+  }catch(e){
+    vi.textContent='❌'; vt.textContent='Bağlantı hatası: '+e.message;
+    setTimeout(function(){goStep(1);},2500);
+  }
+}
+
+async function doSetup(){
+  var gid=document.getElementById('reg-gid').value||curGid;
+  var url=(document.getElementById('s-url').value||'').trim();
+  var btn=document.getElementById('setup-btn');
+  btn.disabled=true; btn.textContent='...';
+  try{
+    var r=await fetch(API+'/'+gid+'/setup',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({webhook_url:url,web_app_url:url,description_tr:'',description_en:''})});
+    var d=await r.json();
+    var res=d.results||{};
+    var wh=res['webhook'];
+    var isWebhook=(wh===true);
+    var isPolling=(!url);
+
+    /* Sonuç satırları */
+    var rows=Object.entries(res).map(function(kv){
+      var v=kv[1]; var isOk=(v===true); var isSkip=(typeof v==='string'&&v.toLowerCase().includes('skip'));
+      var isUrl=(typeof v==='string'&&v.startsWith('http'));
+      var col=isSkip?'var(--mu)':isOk||isUrl?'var(--ok)':'var(--er)';
+      var lbl=isSkip?'⏭ skip':isOk?'✓ ok':isUrl?('✓ '+v.substring(0,35)):'✗ hata';
+      return '<div class="rrow"><span style="font-family:\'DM Mono\',monospace;font-size:.78rem;color:var(--di)">'+kv[0]+'</span>'+
+        '<span style="color:'+col+';font-size:.8rem;font-family:\'DM Mono\',monospace">'+lbl+'</span></div>';
+    }).join('');
+
+    document.getElementById('setup-results').innerHTML=rows;
+
+    var fi=document.getElementById('final-icon');
+    var ft=document.getElementById('final-title');
+    var fm=document.getElementById('final-mode');
+    if(isWebhook){
+      fi.textContent='🎉'; ft.textContent=LNG==='tr'?'Webhook aktif!':'Webhook active!';
+      fm.textContent='URL: '+url;
+      fm.style.color='var(--ok)';
+    } else if(isPolling){
+      fi.textContent='🔄'; ft.textContent=LNG==='tr'?'Bot hazır — Polling modu':'Bot ready — Polling mode';
+      fm.textContent=LNG==='tr'?'Bot Telegram\'ı kendisi sorgulayacak (webhook URL girilmedi)':'Bot will poll Telegram (no webhook URL provided)';
+      fm.style.color='var(--ac)';
+    } else {
+      fi.textContent='⚠️'; ft.textContent=LNG==='tr'?'Webhook kurulamadı':'Webhook failed';
+      fm.textContent=LNG==='tr'?'Polling modunda devam edilebilir':'Can continue in polling mode';
+      fm.style.color='var(--er)';
+    }
+    goStep(4); loadBots();
+  }catch(e){toast('Error: '+e.message,'e')}
+  btn.disabled=false; btn.textContent=LNG==='tr'?'Kurulumu Tamamla 🚀':'Complete Setup 🚀';
+}
+
+async function openGroupsM(gid){
+  openModal('groups-modal');
+  var gl=document.getElementById('groups-list');
+  gl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--mu);font-size:.85rem">...</div>';
+  try{
+    var groups=await fetch(API+'/'+gid+'/groups').then(function(r){return r.json()});
+    if(!groups.length){
+      gl.innerHTML='<div style="color:var(--mu);font-size:.85rem;padding:.5rem">'+(LNG==='tr'?'Grup bulunamadı — botu bir gruba ekleyin':'No groups found — add bot to a group')+'</div>';
+      return;
+    }
+    gl.innerHTML=groups.map(function(g){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem .8rem;background:var(--bg3);border-radius:8px;margin-bottom:.35rem;'+(g.is_admin?'border-left:2px solid var(--ok)':'border-left:2px solid var(--er)')+'\">'+
+        '<div>'+
+          '<div style="font-weight:600;color:var(--wh);font-size:.88rem">'+g.title+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;font-size:.7rem;color:var(--mu)">'+g.chat_id+
+            (g.is_admin?(' <span style="color:var(--ok)">✓ admin</span>'):(' <span style="color:var(--er)">⚠ admin değil</span>'))+
+          '</div>'+
+        '</div>'+
+        '<button class="btn bg_ bxs" onclick="navigator.clipboard.writeText(\''+g.chat_id+'\');toast(\'✓ Kopyalandı\',\'s\')">'+(LNG==='tr'?'Kopyala':'Copy')+'</button>'+
+      '</div>';
+    }).join('');
+  }catch(e){
+    gl.innerHTML='<div style="color:var(--er);font-size:.85rem">Error: '+e.message+'</div>';
+  }
+}
+
+// İlk yükleme: template'den gelen statik veri ile başla
+(function(){
+  var staticBots = {{ bots|tojson if bots else '[]' }};
+  if(staticBots && staticBots.length) {
+    renderBots(staticBots);
+    // Asenkron durum güncellemesi için her bota status sorgula
+    staticBots.forEach(function(b){
+      if(b.has_token){
+        fetch(API+'/'+b.group_id+'/status')
+          .then(function(r){return r.json()})
+          .then(function(d){
+            var card=document.getElementById('bc-'+b.group_id);
+            if(!card) return;
+            var st=d.status||(d.webhook_url?'online':'polling');
+            var stMap={online:'st-online',polling:'st-polling',offline:'st-offline',
+                       unconfigured:'st-unconfigured',checking:'st-checking'};
+            ['st-online','st-polling','st-offline','st-unconfigured','st-checking']
+              .forEach(function(c){card.classList.remove(c)});
+            card.classList.add(stMap[st]||'st-checking');
+            // Badge güncelle
+            var badge=card.querySelector('.st-badge');
+            var stLabel={
+              online:  '🟢 '+(LNG==='tr'?'Webhook Aktif':'Webhook Active'),
+              polling: '🟡 Polling',
+              offline: '🔴 '+(LNG==='tr'?'Çevrimdışı':'Offline'),
+              unconfigured: '⬜ '+(LNG==='tr'?'Token Yok':'No Token'),
+              checking: '⏳'
+            };
+            if(badge) badge.textContent=stLabel[st]||st;
+            // Webhook URL güncelle
+            if(d.webhook_url){
+              var rows=card.querySelectorAll('.info-row .val');
+              // webhookURL bilgisi ekle
+            }
+            // Bot username güncelle
+            if(d.bot_username){
+              var botRow=card.querySelector('.info-row .val.err, .info-row .val.ok');
+              if(botRow) {botRow.textContent='@'+d.bot_username;botRow.className='val ok';}
+            }
+          })
+          .catch(function(){});
+      }
+    });
+  } else {
+    loadBots();
+  }
+})();
+</script>
+{% endblock %}
